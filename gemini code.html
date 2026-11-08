@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hend Drinks - Sistema de Gestão</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- Supabase JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --color-primary: #32D704;
+      --color-primary-hover: #28b003;
+      --color-bg-dark: #181818;
+      --color-card-dark: #222222;
+      --color-card-secondary: #2a2a2a;
+      --color-border-dark: #333333;
+      --color-text-main: #FFFBEE;
+      --color-text-muted: #A0A0A0;
+      
+      --color-alert-warning: #FF9800;
+      --color-alert-danger: #E53935;
+      --color-info: #2196F3;
+
+      --font-title: 'Montserrat', sans-serif;
+      --font-body: 'Inter', sans-serif;
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --shadow-neon: 0 0 15px rgba(50, 215, 4, 0.25);
+    }
+
+    body.light-mode {
+      --color-bg-dark: #F4F5F7;
+      --color-card-dark: #FFFFFF;
+      --color-card-secondary: #EFEFEF;
+      --color-border-dark: #D1D5DB;
+      --color-text-main: #181818;
+      --color-text-muted: #666666;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+
+    body {
+      background-color: var(--color-bg-dark);
+      color: var(--color-text-main);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 75px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* HEADER */
+    .app-header {
+      background-color: var(--color-card-dark);
+      border-bottom: 1px solid var(--color-border-dark);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .brand-container { display: flex; align-items: center; gap: 10px; }
+    .brand-logo-img { height: 38px; width: auto; object-fit: contain; }
+    .brand-title {
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+    .user-badge {
+      display: flex; flex-direction: column; align-items: flex-end; font-size: 0.8rem;
+    }
+    .badge-role {
+      background: rgba(50, 215, 4, 0.15);
+      color: var(--color-primary);
+      padding: 2px 6px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    .btn-icon {
+      background: var(--color-card-secondary);
+      border: 1px solid var(--color-border-dark);
+      color: var(--color-text-main);
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1.1rem;
+      transition: transform 0.2s;
+    }
+    .btn-icon:hover { transform: scale(1.05); }
+
+    /* NAV TABS */
+    .nav-tabs {
+      display: flex;
+      background-color: var(--color-card-dark);
+      border-top: 1px solid var(--color-border-dark);
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 1000;
+      justify-content: space-around;
+      padding: 8px 0;
+    }
+
+    .tab-btn {
+      background: none; border: none;
+      color: var(--color-text-muted);
+      font-family: var(--font-body);
+      font-size: 0.75rem;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      cursor: pointer; width: 25%;
+      transition: color 0.2s;
+    }
+
+    .tab-btn.active { color: var(--color-primary); font-weight: 700; }
+    .tab-btn span { font-size: 1.2rem; }
+
+    /* CONTAINERS */
+    .container { padding: 16px; max-width: 1100px; margin: 0 auto; width: 100%; flex: 1; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* BUTTONS */
+    .btn {
+      background-color: var(--color-primary);
+      color: #000;
+      font-family: var(--font-title);
+      font-weight: 800;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 12px 18px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn:hover { background-color: var(--color-primary-hover); box-shadow: var(--shadow-neon); }
+    .btn-secondary { background-color: var(--color-card-secondary); color: var(--color-text-main); border: 1px solid var(--color-border-dark); }
+    .btn-danger { background-color: var(--color-alert-danger); color: #fff; }
+    .btn-warning { background-color: var(--color-alert-warning); color: #000; }
+    .btn-sm { padding: 6px 12px; font-size: 0.78rem; border-radius: var(--radius-sm); }
+
+    /* INICIAR VENDA OVERLAY */
+    .venda-start-box {
+      background: var(--color-card-dark);
+      border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-lg);
+      padding: 40px 20px;
+      text-align: center;
+      margin: 20px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+    .venda-start-box h2 { color: var(--color-primary); font-size: 1.8rem; margin-bottom: 10px; }
+    .venda-start-box p { color: var(--color-text-muted); margin-bottom: 24px; }
+
+    /* GRID & CARDS */
+    .grid-products {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .product-card {
+      background-color: var(--color-card-dark);
+      border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .product-card:active { transform: scale(0.98); }
+
+    .product-card.warning { border: 2px solid var(--color-alert-warning); }
+    .product-card.danger { border: 2px solid var(--color-alert-danger); opacity: 0.8; }
+
+    .product-card-actions {
+      position: absolute;
+      top: 8px; right: 8px;
+      display: flex; gap: 4px;
+    }
+
+    .btn-card-action {
+      background: var(--color-card-secondary);
+      border: 1px solid var(--color-border-dark);
+      color: var(--color-text-main);
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 0.8rem;
+    }
+
+    .product-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; padding-right: 35px; }
+    .product-category { font-size: 0.7rem; color: var(--color-text-muted); text-transform: uppercase; margin-bottom: 6px; }
+    .product-price { color: var(--color-primary); font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+    .product-stock { font-size: 0.78rem; color: var(--color-text-muted); }
+
+    .qty-controls { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .btn-qty {
+      background: var(--color-card-secondary);
+      border: 1px solid var(--color-border-dark);
+      color: var(--color-text-main);
+      width: 32px; height: 32px; border-radius: var(--radius-sm);
+      font-size: 1.2rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* CART & FOOTER BAR */
+    .pdv-footer {
+      position: fixed; bottom: 58px; left: 0; right: 0;
+      background: var(--color-card-dark); border-top: 1px solid var(--color-border-dark);
+      padding: 12px 20px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 90;
+    }
+
+    .cart-total { font-size: 1.3rem; font-weight: 900; color: var(--color-primary); }
+
+    /* CART DRAWER / MODAL LIST */
+    .cart-item-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--color-border-dark);
+    }
+    .cart-item-info { display: flex; flex-direction: column; }
+    .cart-item-title { font-weight: 700; font-size: 0.9rem; }
+    .cart-item-sub { font-size: 0.8rem; color: var(--color-text-muted); }
+    .cart-item-controls { display: flex; align-items: center; gap: 6px; }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85); display: none;
+      align-items: center; justify-content: center;
+      z-index: 2000; padding: 16px;
+    }
+
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--color-card-dark); border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-lg); padding: 22px; width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+    }
+
+    .form-group { margin-bottom: 14px; display: flex; flex-direction: column; gap: 4px; }
+    .form-group label { font-size: 0.8rem; color: var(--color-text-muted); font-weight: 600; }
+    .form-control {
+      background: var(--color-bg-dark); border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-sm); padding: 10px; color: var(--color-text-main); font-size: 0.95rem;
+      outline: none;
+    }
+    .form-control:focus { border-color: var(--color-primary); }
+
+    /* PASSWORD METER */
+    .pwd-meter { height: 6px; background: #333; border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .pwd-meter-bar { height: 100%; width: 0%; transition: width 0.3s, background-color 0.3s; }
+    .pwd-hint { font-size: 0.72rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    /* STATS & PILLS */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 18px; }
+    .stat-card { background: var(--color-card-dark); border: 1px solid var(--color-border-dark); border-radius: var(--radius-md); padding: 14px; }
+    .stat-title { font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 4px; }
+    .stat-value { font-size: 1.3rem; font-weight: 800; color: var(--color-primary); }
+
+    .pills-container { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; }
+    .pill {
+      background: var(--color-card-secondary); border: 1px solid var(--color-border-dark);
+      color: var(--color-text-muted); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; cursor: pointer;
+      white-space: nowrap;
+    }
+    .pill.active { background: var(--color-primary); color: #000; font-weight: 700; }
+
+    .ai-box {
+      background: linear-gradient(135deg, #1d2b1a 0%, var(--color-card-dark) 100%);
+      border: 1px solid var(--color-primary); border-radius: var(--radius-md);
+      padding: 16px; margin-bottom: 20px;
+    }
+    .ai-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .ai-title strong { color: var(--color-primary); font-size: 1rem; }
+    .ai-content { font-size: 0.85rem; line-height: 1.5; color: var(--color-text-main); }
+    .ai-content ul { padding-left: 18px; margin-top: 6px; }
+    .ai-content li { margin-bottom: 4px; color: var(--color-text-muted); }
+    .ai-content li strong { color: var(--color-text-main); }
+
+    /* TABLES & LISTS */
+    .vendedor-table {
+      width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.85rem;
+    }
+    .vendedor-table th {
+      text-align: left; background: var(--color-card-secondary); padding: 10px;
+      color: var(--color-text-muted); font-size: 0.78rem; border-bottom: 1px solid var(--color-border-dark);
+    }
+    .vendedor-table td {
+      padding: 10px; border-bottom: 1px solid var(--color-border-dark); color: var(--color-text-main);
+    }
+
+    .user-row, .venda-row {
+      background: var(--color-card-dark); border: 1px solid var(--color-border-dark);
+      border-radius: var(--radius-md); padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; margin-bottom: 8px;
+    }
+    .user-info-text { display: flex; flex-direction: column; }
+    .user-name-title { font-weight: 700; font-size: 0.95rem; }
+    .user-email-sub { font-size: 0.78rem; color: var(--color-text-muted); }
+
+    .auth-tab-switch {
+      display: flex; border-bottom: 1px solid var(--color-border-dark); margin-bottom: 16px;
+    }
+    .auth-tab-btn {
+      flex: 1; padding: 10px; background: none; border: none; color: var(--color-text-muted);
+      font-weight: 700; cursor: pointer; border-bottom: 2px solid transparent; font-size: 0.8rem;
+    }
+    .auth-tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
+    .link-forgot { font-size: 0.8rem; color: var(--color-primary); text-decoration: none; cursor: pointer; display: inline-block; margin-top: 8px; }
+  </style>
+  <!-- Dynamic Favicon & Web App Manifest for Home Screen Shortcut -->
+  <link id="dynamic-favicon" rel="shortcut icon" href="">
+  <link id="dynamic-apple-icon" rel="apple-touch-icon" href="">
+  <link id="dynamic-manifest" rel="manifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hend Drinks">
+  <meta name="theme-color" content="#181818">
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div id="logo-icon-slot" style="display: flex; align-items: center; justify-content: center;">
+        <span style="font-size: 1.5rem;" id="default-logo-icon">🍹</span>
+      </div>
+      <h1 class="brand-title">HEND DRINKS</h1>
+    </div>
+    <div class="header-actions">
+      <div class="user-badge" id="header-user-box">
+        <span id="current-user-name">Carregando...</span>
+        <span class="badge-role" id="current-user-role">...</span>
+      </div>
+      <button class="btn-icon" onclick="abrirConfiguracoes()" title="Configurações">⚙️</button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="container">
+
+    <!-- AUTH SCREEN (LOGIN, SOLICITAR CADASTRO & RECUPERAR SENHA COM VERIFICAÇÃO) -->
+    <div id="auth-modal" class="modal-overlay active">
+      <div class="modal-card">
+        <div style="text-align: center; margin-bottom: 16px;">
+          <div id="auth-logo-slot" style="display: flex; justify-content: center; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 2.2rem;" id="auth-default-icon">🍹</span>
+          </div>
+          <h2 style="font-family: var(--font-title); color: var(--color-primary); margin-top: 4px;">HEND DRINKS</h2>
+        </div>
+
+        <div class="auth-tab-switch">
+          <button class="auth-tab-btn active" id="btn-auth-login" onclick="mudarAuthTab('login')">ENTRAR</button>
+          <button class="auth-tab-btn" id="btn-auth-signup" onclick="mudarAuthTab('signup')">PEDIR CADASTRO</button>
+          <button class="auth-tab-btn" id="btn-auth-reset" onclick="mudarAuthTab('reset')">RECUPERAR SENHA</button>
+        </div>
+
+        <!-- LOGIN FORM -->
+        <form id="form-login" onsubmit="event.preventDefault(); processarLogin();">
+          <div class="form-group">
+            <label>E-mail</label>
+            <input type="email" id="login-email" class="form-control" required placeholder="seuemail@empresa.com">
+          </div>
+          <div class="form-group">
+            <label>Senha</label>
+            <input type="password" id="login-senha" class="form-control" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">ENTRAR NO SISTEMA</button>
+          <div style="text-align: center; margin-top: 10px;">
+            <a class="link-forgot" onclick="mudarAuthTab('reset')">Esqueceu sua senha? Clique aqui para redefinir</a>
+          </div>
+        </form>
+
+        <!-- SOLICITAR CADASTRO FORM -->
+        <form id="form-signup" style="display: none;" onsubmit="event.preventDefault(); processarSolicitacaoCadastro();">
+          <div class="form-group">
+            <label>Seu Nome Completo</label>
+            <input type="text" id="signup-nome" class="form-control" required placeholder="Ex: João Silva">
+          </div>
+          <div class="form-group">
+            <label>Seu E-mail</label>
+            <input type="email" id="signup-email" class="form-control" required placeholder="seuemail@empresa.com">
+          </div>
+          <div class="form-group">
+            <label>Senha Forte</label>
+            <input type="password" id="signup-senha" class="form-control" required placeholder="••••••••" oninput="avaliarSenha(this.value, 'pwd-bar-signup', 'pwd-hint-signup')">
+            <div class="pwd-meter"><div id="pwd-bar-signup" class="pwd-meter-bar"></div></div>
+            <div id="pwd-hint-signup" class="pwd-hint">Use 8+ caracteres com letras e números.</div>
+          </div>
+          <div class="form-group">
+            <label>Confirmar Senha</label>
+            <input type="password" id="signup-senha-confirm" class="form-control" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn btn-warning" style="width: 100%; margin-top: 10px;">PEDIR CADASTRO (SOLICITAR)</button>
+          <p style="font-size: 0.75rem; color: var(--color-text-muted); text-align: center; margin-top: 8px;">
+            Sua solicitação será enviada para o Administrador aprovar.
+          </p>
+        </form>
+
+        <!-- RECUPERAR SENHA (COM VALIDAÇÃO DE IDENTIDADE NOME + EMAIL) -->
+        <form id="form-reset" style="display: none;" onsubmit="event.preventDefault(); processarRecuperacaoSenha();">
+          <p style="font-size: 0.8rem; color: var(--color-text-muted); margin-bottom: 12px;">
+            Para confirmar sua identidade, digite o seu <strong>E-mail</strong> e <strong>Nome Completo exatamente como cadastrado</strong>.
+          </p>
+          <div class="form-group">
+            <label>Seu E-mail Cadastrado</label>
+            <input type="email" id="reset-email" class="form-control" required placeholder="seuemail@empresa.com">
+          </div>
+          <div class="form-group">
+            <label>Seu Nome Completo (Confirmação)</label>
+            <input type="text" id="reset-nome-verificacao" class="form-control" required placeholder="Ex: João Silva">
+          </div>
+          <div class="form-group">
+            <label>Nova Senha</label>
+            <input type="password" id="reset-senha" class="form-control" required placeholder="••••••••" oninput="avaliarSenha(this.value, 'pwd-bar-reset', 'pwd-hint-reset')">
+            <div class="pwd-meter"><div id="pwd-bar-reset" class="pwd-meter-bar"></div></div>
+            <div id="pwd-hint-reset" class="pwd-hint">Crie uma nova senha.</div>
+          </div>
+          <div class="form-group">
+            <label>Confirmar Nova Senha</label>
+            <input type="password" id="reset-senha-confirm" class="form-control" required placeholder="••••••••">
+          </div>
+          <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">VALIDAR E MUDAR SENHA</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- TAB 1: VENDAS (PDV) -->
+    <section id="tab-vendas" class="tab-content active">
+      <div id="venda-state-closed" class="venda-start-box">
+        <h2>CAIXA FECHADO / AGUARDANDO VENDA</h2>
+        <p>Clique no botão abaixo para abrir a sessão de vendas e habilitar o catálogo de produtos.</p>
+        <button class="btn" style="font-size: 1.1rem; padding: 16px 32px;" onclick="iniciarSessaoVenda()">⚡ INICIAR VENDA</button>
+      </div>
+
+      <div id="venda-state-open" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2>Caixa de Vendas</h2>
+          <button class="btn btn-secondary btn-sm" onclick="fecharCaixaDoDia()">🔒 Fechar Caixa do Dia</button>
+        </div>
+
+        <div class="pills-container" id="vendas-categorias">
+          <div class="pill active" onclick="filtrarVendasCategoria('Todos', this)">Todos</div>
+          <div class="pill" onclick="filtrarVendasCategoria('Energéticos', this)">Energéticos</div>
+          <div class="pill" onclick="filtrarVendasCategoria('Refrigerantes', this)">Refrigerantes</div>
+          <div class="pill" onclick="filtrarVendasCategoria('Outros', this)">Outros</div>
+        </div>
+
+        <div class="grid-products" id="grid-vendas-produtos"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: ESTOQUE -->
+    <section id="tab-estoque" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h2>Gestão de Estoque</h2>
+        <button class="btn btn-sm" id="btn-novo-produto" onclick="abrirModalProduto()">+ Novo Produto</button>
+      </div>
+
+      <!-- ANÁLISE DE IA DE ESTOQUE DEDICADA E AVANÇADA -->
+      <div class="ai-box">
+        <div class="ai-title">
+          <strong>🤖 Diagnóstico Inteligente de Estoque (IA)</strong>
+          <button class="btn btn-sm" style="padding: 4px 10px; font-size: 0.75rem;" onclick="gerarDiagnosticoEstoqueIA()">Atualizar Análise 🔄</button>
+        </div>
+        <div id="ai-estoque-result" class="ai-content">
+          Clique no botão "Atualizar Análise" para gerar o relatório inteligente de reposição.
+        </div>
+      </div>
+
+      <div class="grid-products" id="grid-estoque-produtos"></div>
+    </section>
+
+    <!-- TAB 3: FINANCEIRO E HISTÓRICO DE VENDAS -->
+    <section id="tab-financeiro" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+        <h2>Painel Financeiro & Vendas</h2>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-secondary btn-sm" onclick="abrirModalDespesaExtra()">+ Custo/Entrada</button>
+          <button class="btn btn-danger btn-sm" id="btn-reset-total-vendas" onclick="resetarTodasVendasTotalmente()" style="display:none;">🚨 Reset Total de Vendas</button>
+        </div>
+      </div>
+
+      <!-- ANÁLISE DE IA FINANCEIRA DEDICADA -->
+      <div class="ai-box">
+        <div class="ai-title">
+          <strong>🧠 Consultor Financeiro Gemini (IA)</strong>
+          <button class="btn btn-sm" style="padding: 4px 10px; font-size: 0.75rem;" onclick="gerarDiagnosticoFinanceiroIA()">Gerar Diagnóstico 📊</button>
+        </div>
+        <div id="ai-financeiro-result" class="ai-content">
+          Clique no botão acima para processar as margens, lucros e desempenho de caixa em tempo real.
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-title">Faturamento Total</div>
+          <div class="stat-value" id="stat-faturamento">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Custo Estoque (CMV)</div>
+          <div class="stat-value" id="stat-cmv" style="color: var(--color-alert-danger);">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Comissões Paga/A Pagar</div>
+          <div class="stat-value" id="stat-comissoes" style="color: var(--color-alert-warning);">R$ 0,00</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Custos Extras / Saídas</div>
+          <div class="stat-value" id="stat-despesas" style="color: var(--color-alert-danger);">R$ 0,00</div>
+        </div>
+        <div class="stat-card" style="grid-column: span 2;">
+          <div class="stat-title">Lucro Líquido Real</div>
+          <div class="stat-value" id="stat-lucro" style="font-size: 1.6rem;">R$ 0,00</div>
+        </div>
+      </div>
+
+      <div style="background: var(--color-card-dark); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-border-dark); margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <h3 style="font-size: 1rem;">Análise Visual de Desempenho</h3>
+          <select id="select-grafico-tipo" class="form-control" style="width: auto; font-size: 0.85rem; padding: 6px 10px;" onchange="renderizarGrafico()">
+            <option value="dia">Vendas por Dia</option>
+            <option value="mes">Vendas Mensais</option>
+            <option value="pagamento">Meios de Pagamento</option>
+          </select>
+        </div>
+        <canvas id="chartFinanceiro" style="width: 100%; max-height: 240px;"></canvas>
+      </div>
+
+      <!-- SEÇÃO EXCLUSIVA: RELATÓRIO DE VENDEDORES E COMISSÕES A PAGAR -->
+      <div style="background: var(--color-card-dark); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-border-dark); margin-bottom: 20px;">
+        <h3 style="font-size: 1rem; color: var(--color-primary); margin-bottom: 8px;">👥 Vendas e Comissões por Vendedor (A Receber / A Pagar)</h3>
+        <p style="font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 12px;">Detalhamento individual de desempenho para fechamento de comissão da equipe.</p>
+        <div style="overflow-x: auto;">
+          <table class="vendedor-table">
+            <thead>
+              <tr>
+                <th>Vendedor</th>
+                <th>Qtd. Vendas</th>
+                <th>Total Vendido (R$)</th>
+                <th>Comissão Acumulada (R$)</th>
+              </tr>
+            </thead>
+            <tbody id="tabela-vendedores-comissoes">
+              <tr><td colspan="4" style="text-align: center; color: var(--color-text-muted);">Nenhum dado de venda registrado.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- HISTÓRICO DE VENDAS COM CANCELAMENTO/REMOÇÃO INDIVIDUAL -->
+      <div style="background: var(--color-card-dark); padding: 16px; border-radius: var(--radius-md); border: 1px solid var(--color-border-dark);">
+        <h3 style="font-size: 1rem; margin-bottom: 12px; color: var(--color-primary);">📋 Histórico Recente de Vendas (Remoção de Testes)</h3>
+        <div id="lista-historico-vendas" style="max-height: 300px; overflow-y: auto;">
+          <p style="font-size: 0.8rem; color: var(--color-text-muted);">Nenhuma venda registrada até o momento.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: EQUIPE (ADMIN ONLY) -->
+    <section id="tab-equipe" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h2>Gestão de Equipe & Solicitações</h2>
+        <button class="btn btn-sm" onclick="abrirModalNovoUsuario()">+ Adicionar Usuário</button>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <h3 style="font-size: 0.95rem; color: var(--color-alert-warning); margin-bottom: 10px;">⌛ Solicitações de Cadastro Pendentes</h3>
+        <div id="lista-solicitacoes-pendentes"></div>
+      </div>
+
+      <div>
+        <h3 style="font-size: 0.95rem; color: var(--color-primary); margin-bottom: 10px;">👥 Colaboradores Cadastrados</h3>
+        <div id="lista-equipe-ativos"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PDV FOOTER BAR -->
+  <div class="pdv-footer" id="pdv-bar" style="display: none;">
+    <div>
+      <span style="font-size: 0.78rem; color: var(--color-text-muted);">Itens no Carrinho: <strong id="cart-count">0</strong></span>
+      <div class="cart-total" id="cart-total">R$ 0,00</div>
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-secondary btn-sm" onclick="verCarrinhoDetalhes()">🛒 Ver Itens</button>
+      <button class="btn" onclick="abrirModalFinalizarVenda()">Finalizar Venda ➔</button>
+    </div>
+  </div>
+
+  <!-- NAVIGATION TABS -->
+  <nav class="nav-tabs">
+    <button class="tab-btn active" onclick="mudarAba('vendas', this)"><span>🛒</span> Vendas</button>
+    <button class="tab-btn" onclick="mudarAba('estoque', this)"><span>📦</span> Estoque</button>
+    <button class="tab-btn" onclick="mudarAba('financeiro', this)"><span>📊</span> Financeiro</button>
+    <button class="tab-btn" onclick="mudarAba('equipe', this)"><span>👥</span> Equipe</button>
+  </nav>
+
+  <!-- MODAL CARRINHO DETALHADO -->
+  <div id="modal-carrinho" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Itens no Carrinho</h3>
+      <div id="carrinho-itens-lista" style="max-height: 250px; overflow-y: auto;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px; font-weight: 800;">
+        <span>TOTAL:</span>
+        <span id="carrinho-modal-total" style="color: var(--color-primary); font-size: 1.2rem;">R$ 0,00</span>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 16px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Voltar ao Catálogo</button>
+        <button class="btn" style="flex:1;" onclick="fecharModais(); abrirModalFinalizarVenda();">Avançar ➔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CADASTRO/EDIÇÃO DE PRODUTO -->
+  <div id="modal-produto" class="modal-overlay">
+    <div class="modal-card">
+      <h3 id="modal-produto-titulo" style="margin-bottom: 12px;">Cadastrar Produto</h3>
+      <input type="hidden" id="prod-id">
+      <div class="form-group">
+        <label>Nome do Produto</label>
+        <input type="text" id="prod-nome" class="form-control" placeholder="Ex: Baly Tradicional 2L">
+      </div>
+      <div class="form-group">
+        <label>Categoria</label>
+        <select id="prod-categoria" class="form-control">
+          <option value="Energéticos">Energéticos</option>
+          <option value="Refrigerantes">Refrigerantes</option>
+          <option value="Sucos">Sucos</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Custo de Aquisição (R$)</label>
+        <input type="number" step="0.01" id="prod-custo" class="form-control" placeholder="5.00">
+      </div>
+      <div class="form-group">
+        <label>Preço de Venda Padrão (R$)</label>
+        <input type="number" step="0.01" id="prod-preco" class="form-control" placeholder="12.00">
+      </div>
+      <div class="form-group">
+        <label>Comissão por Unidade (R$)</label>
+        <input type="number" step="0.01" id="prod-comissao" class="form-control" placeholder="1.50">
+      </div>
+      <div class="form-group">
+        <label>Quantidade Inicial em Estoque</label>
+        <input type="number" id="prod-qtd" class="form-control" placeholder="24">
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarProduto()">Salvar Produto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL FINALIZAR VENDA -->
+  <div id="modal-venda" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Finalizar Pagamento</h3>
+      <div class="form-group">
+        <label>Forma de Pagamento</label>
+        <select id="venda-pagamento" class="form-control">
+          <option value="Pix">Pix</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Débito">Cartão de Débito</option>
+          <option value="Crédito">Cartão de Crédito</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Confirmar Valor Total Vendido (R$)</label>
+        <input type="number" step="0.01" id="venda-valor-final" class="form-control">
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Voltar</button>
+        <button class="btn" style="flex:1;" onclick="confirmarVendaBD()">Confirmar e Gravar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CUSTO EXTRA -->
+  <div id="modal-despesa" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Lançar Custo ou Entrada Extra</h3>
+      <div class="form-group">
+        <label>Tipo de Lançamento</label>
+        <select id="despesa-tipo" class="form-control">
+          <option value="saida">Custo Extra / Saída (Gelo, Bag, Combustível)</option>
+          <option value="entrada">Entrada Extra / Aporte</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Descrição</label>
+        <input type="text" id="despesa-descricao" class="form-control" placeholder="Ex: Saco de Gelo 10kg">
+      </div>
+      <div class="form-group">
+        <label>Valor (R$)</label>
+        <input type="number" step="0.01" id="despesa-valor" class="form-control" placeholder="15.00">
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarDespesaExtra()">Gravar Lançamento</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ALTERAR SENHA DO USUÁRIO LOGADO -->
+  <div id="modal-minha-senha" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Alterar Minha Senha</h3>
+      <div class="form-group">
+        <label>Senha Atual</label>
+        <input type="password" id="my-pwd-atual" class="form-control" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label>Nova Senha</label>
+        <input type="password" id="my-pwd-nova" class="form-control" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label>Confirmar Nova Senha</label>
+        <input type="password" id="my-pwd-nova-confirm" class="form-control" placeholder="••••••••">
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarMinhaNovaSenha()">Salvar Nova Senha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL REDEFINIR SENHA POR ADM -->
+  <div id="modal-alterar-senha-adm" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Redefinir Senha do Usuário</h3>
+      <input type="hidden" id="reset-user-id">
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" id="reset-user-nome" class="form-control" readonly>
+      </div>
+      <div class="form-group">
+        <label>Nova Senha</label>
+        <input type="password" id="reset-nova-senha-adm" class="form-control" placeholder="Digite a nova senha">
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarNovaSenhaUsuarioAdm()">Salvar Nova Senha</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL ADICIONAR USUÁRIO DIRETO -->
+  <div id="modal-usuario" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 12px;">Adicionar Colaborador</h3>
+      <div class="form-group">
+        <label>Nome Completo</label>
+        <input type="text" id="usr-nome" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>E-mail</label>
+        <input type="email" id="usr-email" class="form-control">
+      </div>
+      <div class="form-group">
+        <label>Senha Inicial</label>
+        <input type="password" id="usr-senha" class="form-control" value="123456">
+      </div>
+      <div class="form-group">
+        <label>Cargo / Permissão</label>
+        <select id="usr-cargo" class="form-control">
+          <option value="Vendedor">Vendedor</option>
+          <option value="ADM">Administrador (ADM)</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="fecharModais()">Cancelar</button>
+        <button class="btn" style="flex:1;" onclick="salvarNovoUsuario()">Salvar Usuário</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CONFIGURAÇÕES -->
+  <div id="modal-configuracoes" class="modal-overlay">
+    <div class="modal-card">
+      <h3 style="margin-bottom: 16px;">Configurações do Sistema</h3>
+      <div class="form-group">
+        <label>Tema Visual</label>
+        <button class="btn btn-secondary" style="width: 100%; justify-content: space-between;" onclick="alternarTemaVisual()">
+          <span id="theme-status-text">🌙 Modo Escuro</span>
+          <span>Alternar 🔄</span>
+        </button>
+      </div>
+
+      <hr style="border-color: var(--color-border-dark); margin: 16px 0;">
+      <button class="btn btn-secondary" style="width: 100%;" onclick="abrirModalMinhaSenha()">🔑 Alterar Minha Senha</button>
+      <button class="btn btn-danger" style="width: 100%; margin-top: 10px;" onclick="fazerLogout()">🚪 Sair da Conta (Logout)</button>
+      <button class="btn btn-secondary" style="width: 100%; margin-top: 10px;" onclick="fecharModais()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    // CREDENCIAIS SUPABASE
+    const SUPABASE_URL = 'https://piuttahokwgbawgczidw.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_DtAckDhC19XwNLSRGHRx4Q_xtXtfQMT';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // ESTADO GLOBAL DA APLICAÇÃO
+    let usuarioAtual = null;
+    let produtos = [];
+    let carrinho = [];
+    let vendas = [];
+    let despesasExtras = [];
+    let usuariosList = [];
+    let categoriaFiltroVendas = 'Todos';
+    let vendaSessaoAtiva = false;
+    let chartInstance = null;
+
+    const EMAIL_ADMIN_ME = 'mathex.fire.0@gmail.com';
+
+    window.onload = async () => {
+      carregarTemaSalvo();
+      await verificarSessaoUsuario();
+    };
+
+    function carregarTemaSalvo() {
+      const tema = localStorage.getItem('hend_theme');
+      const isLight = (tema === 'light');
+      if (isLight) {
+        document.body.classList.add('light-mode');
+        document.getElementById('theme-status-text').innerText = '☀️ Modo Claro';
+      } else {
+        document.body.classList.remove('light-mode');
+        document.getElementById('theme-status-text').innerText = '🌙 Modo Escuro';
+      }
+      atualizarLogoPorTema(isLight);
+    }
+
+    function alternarTemaVisual() {
+      document.body.classList.toggle('light-mode');
+      const isLight = document.body.classList.contains('light-mode');
+      localStorage.setItem('hend_theme', isLight ? 'light' : 'dark');
+      document.getElementById('theme-status-text').innerText = isLight ? '☀️ Modo Claro' : '🌙 Modo Escuro';
+      atualizarLogoPorTema(isLight);
+    }
+
+    function atualizarLogoPorTema(isLight) {
+      // Modo escuro usa 2.png | Modo claro usa 4.png
+      const logoFile = isLight ? '4.png' : '2.png';
+      aplicarLogoNoSistema(logoFile);
+    }
+
+    function aplicarLogoNoSistema(url) {
+      if (!url) return;
+      
+      // 1. Atualizar Logo no Cabeçalho
+      const logoSlot = document.getElementById('logo-icon-slot');
+      if (logoSlot) {
+        logoSlot.innerHTML = `<img src="${url}" class="brand-logo-img" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">`;
+      }
+
+      // 2. Atualizar Logo na Tela de Login/Cadastro
+      const authSlot = document.getElementById('auth-logo-slot');
+      if (authSlot) {
+        authSlot.innerHTML = `<img src="${url}" style="height: 48px; width: auto; object-fit: contain;" alt="Logo">`;
+      }
+
+      // 3. Atualizar Ícone do App no Celular (Atalho / PWA)
+      atualizarIconesEAtalho(url);
+    }
+
+    function atualizarIconesEAtalho(url) {
+      if (!url) return;
+
+      // Favicon para navegador e Apple Touch Icon para iOS/Android
+      let favicon = document.getElementById('dynamic-favicon');
+      let appleIcon = document.getElementById('dynamic-apple-icon');
+      if (favicon) favicon.href = url;
+      if (appleIcon) appleIcon.href = url;
+
+      // Gerar Web App Manifest dinâmico para atalho na Tela Inicial
+      const manifestObj = {
+        name: "Hend Drinks - Gestão",
+        short_name: "Hend Drinks",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#181818",
+        theme_color: "#32D704",
+        icons: [
+          { src: url, sizes: "192x192", type: "image/png" },
+          { src: url, sizes: "512x512", type: "image/png" }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
+      const manifestURL = URL.createObjectURL(blob);
+
+      let manifestLink = document.getElementById('dynamic-manifest');
+      if (manifestLink) manifestLink.href = manifestURL;
+    }
+
+    // CORREÇÃO CRÍTICA DO BLOQUEIO: Consulta o Banco de Dados em tempo real
+    async function verificarSessaoUsuario() {
+      const sessaoRaw = localStorage.getItem('hend_user_session');
+      if (sessaoRaw) {
+        try {
+          const sessao = JSON.parse(sessaoRaw);
+          const seteDiasMs = 7 * 24 * 60 * 60 * 1000;
+          if (Date.now() - sessao.timestamp < seteDiasMs) {
+            
+            // Validação no Supabase para garantir se o usuário foi bloqueado
+            if (sessao.user && sessao.user.email !== EMAIL_ADMIN_ME) {
+              const { data: users, error } = await db.from('perfis_usuarios').select('*').eq('email', sessao.user.email);
+              if (error || !users || users.length === 0 || users[0].status === 'bloqueado' || users[0].status === 'pendente') {
+                alert('⚠️ Acesso Negado: Seu usuário foi BLOQUEADO ou está pendente pelo Administrador.');
+                fazerLogout();
+                return;
+              }
+              usuarioAtual = users[0]; // Usa o perfil atualizado do BD
+            } else {
+              usuarioAtual = sessao.user;
+            }
+
+            document.getElementById('auth-modal').classList.remove('active');
+            await inicializarAppComUsuario();
+            return;
+          }
+        } catch(e) {}
+      }
+      document.getElementById('auth-modal').classList.add('active');
+    }
+
+    async function inicializarAppComUsuario() {
+      document.getElementById('current-user-name').innerText = usuarioAtual.nome;
+      document.getElementById('current-user-role').innerText = usuarioAtual.cargo;
+
+      if (usuarioAtual.cargo === 'Vendedor') {
+        document.getElementById('btn-novo-produto').style.display = 'none';
+        document.getElementById('btn-reset-total-vendas').style.display = 'none';
+        // Garantir que a aba inicial para o vendedor seja sempre Vendas
+        mudarAba('vendas');
+      } else if (usuarioAtual.cargo === 'ADM') {
+        document.getElementById('btn-reset-total-vendas').style.display = 'inline-flex';
+      }
+
+      await carregarProdutos();
+      await carregarVendas();
+      await carregarDespesasExtras();
+      if (usuarioAtual.cargo === 'ADM') {
+        await carregarUsuarios();
+      }
+
+      renderizarVendas();
+      renderizarEstoque();
+      renderizarEquipe();
+      atualizarFinanceiro();
+      renderizarHistoricoVendas();
+      renderizarRelatorioVendedores();
+      
+      // Executa diagnósticos de IA na inicialização
+      gerarDiagnosticoEstoqueIA();
+      gerarDiagnosticoFinanceiroIA();
+    }
+
+    // --- AUTH FLOW ---
+
+    function mudarAuthTab(tab) {
+      document.getElementById('btn-auth-login').classList.toggle('active', tab === 'login');
+      document.getElementById('btn-auth-signup').classList.toggle('active', tab === 'signup');
+      document.getElementById('btn-auth-reset').classList.toggle('active', tab === 'reset');
+      
+      document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+      document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+      document.getElementById('form-reset').style.display = tab === 'reset' ? 'block' : 'none';
+    }
+
+    function avaliarSenha(senha, barId, hintId) {
+      const bar = document.getElementById(barId);
+      const hint = document.getElementById(hintId);
+      let score = 0;
+      if (senha.length >= 8) score++;
+      if (/[A-Z]/.test(senha)) score++;
+      if (/[a-z]/.test(senha)) score++;
+      if (/[0-9]/.test(senha) || /[^A-Za-z0-9]/.test(senha)) score++;
+
+      if (score <= 1) {
+        bar.style.width = '25%'; bar.style.backgroundColor = '#E53935';
+        hint.innerText = 'Senha Fraca.';
+      } else if (score <= 3) {
+        bar.style.width = '60%'; bar.style.backgroundColor = '#FF9800';
+        hint.innerText = 'Senha Média.';
+      } else {
+        bar.style.width = '100%'; bar.style.backgroundColor = '#32D704';
+        hint.innerText = 'Senha Forte e Segura!';
+      }
+    }
+
+    async function processarLogin() {
+      const email = document.getElementById('login-email').value.trim();
+      const senha = document.getElementById('login-senha').value;
+
+      const { data: users, error } = await db.from('perfis_usuarios').select('*').eq('email', email);
+
+      if (error || !users || users.length === 0) {
+        if (email === EMAIL_ADMIN_ME) {
+          usuarioAtual = { id: 'usr-admin-me', nome: 'Administrador Principal', email: EMAIL_ADMIN_ME, cargo: 'ADM', status: 'ativo' };
+          salvarSessao(usuarioAtual);
+          document.getElementById('auth-modal').classList.remove('active');
+          inicializarAppComUsuario();
+          return;
+        }
+        return alert('Usuário não encontrado. Verifique seu e-mail ou peça um cadastro.');
+      }
+
+      const usr = users[0];
+      if (usr.senha !== senha) {
+        return alert('Senha incorreta.');
+      }
+
+      if (usr.status === 'pendente') {
+        return alert('Seu cadastro ainda está PENDENTE de aprovação do Administrador.');
+      }
+
+      if (usr.status === 'bloqueado') {
+        return alert('⛔ ACESSO BLOQUEADO: Seu usuário foi bloqueado pelo Administrador.');
+      }
+
+      usuarioAtual = usr;
+      salvarSessao(usr);
+      document.getElementById('auth-modal').classList.remove('active');
+      inicializarAppComUsuario();
+    }
+
+    async function processarSolicitacaoCadastro() {
+      const nome = document.getElementById('signup-nome').value.trim();
+      const email = document.getElementById('signup-email').value.trim();
+      const senha = document.getElementById('signup-senha').value;
+      const confirm = document.getElementById('signup-senha-confirm').value;
+
+      if (senha !== confirm) return alert('As senhas digitadas não coincidem.');
+      if (senha.length < 6) return alert('Crie uma senha com pelo menos 6 caracteres.');
+
+      const cargo = (email === EMAIL_ADMIN_ME) ? 'ADM' : 'Vendedor';
+      const status = (email === EMAIL_ADMIN_ME) ? 'ativo' : 'pendente';
+
+      const { data, error } = await db.from('perfis_usuarios').insert([{
+        nome, email, senha, cargo, status
+      }]);
+
+      if (error) {
+        return alert('Erro ao solicitar cadastro. Este e-mail já pode estar em uso.');
+      }
+
+      alert(status === 'ativo' ? 'Cadastro ativado! Faça seu login.' : 'Solicitação enviada ao Administrador com sucesso!');
+      mudarAuthTab('login');
+      document.getElementById('login-email').value = email;
+    }
+
+    async function processarRecuperacaoSenha() {
+      const email = document.getElementById('reset-email').value.trim();
+      const nomeVerificacao = document.getElementById('reset-nome-verificacao').value.trim().toLowerCase();
+      const senha = document.getElementById('reset-senha').value;
+      const confirm = document.getElementById('reset-senha-confirm').value;
+
+      if (senha !== confirm) return alert('As senhas não coincidem.');
+      if (senha.length < 6) return alert('A senha deve ter no mínimo 6 caracteres.');
+
+      const { data: users, error } = await db.from('perfis_usuarios').select('*').eq('email', email);
+
+      if (error || !users || users.length === 0) {
+        return alert('E-mail não encontrado no sistema.');
+      }
+
+      const usr = users[0];
+      if (usr.nome.trim().toLowerCase() !== nomeVerificacao) {
+        return alert('Validação de Identidade Falhou! O nome digitado não corresponde ao cadastro deste e-mail.');
+      }
+
+      await db.from('perfis_usuarios').update({ senha }).eq('email', email);
+      alert('Identidade Confirmada! Sua senha foi alterada com sucesso. Faça seu login.');
+      mudarAuthTab('login');
+      document.getElementById('login-email').value = email;
+    }
+
+    function salvarSessao(usr) {
+      localStorage.setItem('hend_user_session', JSON.stringify({
+        user: usr,
+        timestamp: Date.now()
+      }));
+    }
+
+    function fazerLogout() {
+      localStorage.removeItem('hend_user_session');
+      usuarioAtual = null;
+      location.reload();
+    }
+
+    function abrirModalMinhaSenha() {
+      fecharModais();
+      document.getElementById('modal-minha-senha').classList.add('active');
+    }
+
+    async function salvarMinhaNovaSenha() {
+      const atual = document.getElementById('my-pwd-atual').value;
+      const nova = document.getElementById('my-pwd-nova').value;
+      const confirm = document.getElementById('my-pwd-nova-confirm').value;
+
+      if (!usuarioAtual) return;
+      if (nova !== confirm) return alert('As novas senhas não coincidem.');
+      if (nova.length < 6) return alert('A nova senha deve ter no mínimo 6 caracteres.');
+
+      const { data: users } = await db.from('perfis_usuarios').select('*').eq('id', usuarioAtual.id);
+      if (users && users[0] && users[0].senha !== atual) {
+        return alert('Sua senha atual está incorreta!');
+      }
+
+      await db.from('perfis_usuarios').update({ senha: nova }).eq('id', usuarioAtual.id);
+      alert('Sua senha foi alterada com sucesso!');
+      fecharModais();
+    }
+
+    // --- NAVEGAÇÃO DE ABAS ---
+
+    function mudarAba(aba, el) {
+      if (usuarioAtual && usuarioAtual.cargo === 'Vendedor' && (aba === 'financeiro' || aba === 'equipe' || aba === 'estoque')) {
+        return alert('Acesso restrito apenas para Administradores.');
+      }
+
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(`tab-${aba}`).classList.add('active');
+      if (el) el.classList.add('active');
+
+      document.getElementById('pdv-bar').style.display = (aba === 'vendas' && vendaSessaoAtiva) ? 'flex' : 'none';
+      if (aba === 'financeiro') {
+        renderizarGrafico();
+        renderizarHistoricoVendas();
+        renderizarRelatorioVendedores();
+        gerarDiagnosticoFinanceiroIA();
+      } else if (aba === 'estoque') {
+        gerarDiagnosticoEstoqueIA();
+      }
+    }
+
+    // --- CARREGAMENTO DE DADOS ---
+
+    async function carregarProdutos() {
+      const { data } = await db.from('produtos').select('*').order('nome');
+      if (data) produtos = data;
+    }
+
+    async function carregarVendas() {
+      const { data } = await db.from('vendas').select('*').order('created_at', { ascending: false });
+      if (data) vendas = data;
+    }
+
+    async function carregarDespesasExtras() {
+      const { data } = await db.from('despesas_extras').select('*').order('created_at', { ascending: false });
+      if (data) despesasExtras = data || [];
+    }
+
+    async function carregarUsuarios() {
+      const { data } = await db.from('perfis_usuarios').select('*').order('created_at', { ascending: false });
+      if (data) usuariosList = data || [];
+    }
+
+    // --- ANÁLISE COMPLETA DE IA DEDICADA ---
+
+    function gerarDiagnosticoEstoqueIA() {
+      const target = document.getElementById('ai-estoque-result');
+      if (!produtos || produtos.length === 0) {
+        target.innerHTML = "Nenhum produto cadastrado para análise.";
+        return;
+      }
+
+      const zerados = produtos.filter(p => p.estoque === 0);
+      const criticos = produtos.filter(p => p.estoque > 0 && p.estoque <= 5);
+      const altaMargem = [...produtos].sort((a,b) => (b.preco - b.custo) - (a.preco - a.custo))[0];
+
+      let html = `<p><strong>Análise de Reposição & Giro de Estoque:</strong></p><ul>`;
+
+      if (zerados.length > 0) {
+        html += `<li style="color:var(--color-alert-danger);">🚨 <strong>ESTOQUE ZERADO:</strong> ${zerados.map(p => p.nome).join(', ')}. Necessário compra imediata!</li>`;
+      } else {
+        html += `<li>✅ Nenhum produto totalmente esgotado no momento.</li>`;
+      }
+
+      if (criticos.length > 0) {
+        html += `<li style="color:var(--color-alert-warning);">⚠️ <strong>NÍVEL CRÍTICO (≤5 un):</strong> ${criticos.map(p => `${p.nome} (${p.estoque} un)`).join(', ')}. Sugere-se pedido de reposição.</li>`;
+      } else {
+        html += `<li>📦 Níveis de estoque regularizados acima do limite mínimo de segurança.</li>`;
+      }
+
+      if (altaMargem) {
+        const margemLucro = (((altaMargem.preco - altaMargem.custo) / altaMargem.preco) * 100).toFixed(0);
+        html += `<li>💡 <strong>DESTAQUE DE MARGEM:</strong> <strong>${altaMargem.nome}</strong> gera a maior margem líquida da distribuidora (<strong>${margemLucro}% de lucro</strong> por unidade). Garanta estoque no final de semana!</li>`;
+      }
+
+      html += `</ul>`;
+      target.innerHTML = html;
+    }
+
+    function gerarDiagnosticoFinanceiroIA() {
+      const target = document.getElementById('ai-financeiro-result');
+      if (!vendas || vendas.length === 0) {
+        target.innerHTML = "Ainda não há vendas registradas para calcular métricas financeiras de inteligência artificial.";
+        return;
+      }
+
+      const faturamento = vendas.reduce((s, v) => s + Number(v.total), 0);
+      const comissoes = vendas.reduce((s, v) => s + Number(v.comissao_total), 0);
+      const despesas = despesasExtras.filter(d => d.tipo === 'saida').reduce((s, d) => s + Number(d.valor), 0);
+      const cmvEstoque = faturamento * 0.45;
+      const lucroLiquido = faturamento - cmvEstoque - comissoes - despesas;
+      const margemLiquidaPct = faturamento > 0 ? ((lucroLiquido / faturamento) * 100).toFixed(1) : '0';
+      const ticketMedio = faturamento > 0 ? (faturamento / vendas.length).toFixed(2) : '0.00';
+
+      // Encontrar método de pagamento mais usado
+      const pagamentosCount = {};
+      vendas.forEach(v => {
+        pagamentosCount[v.forma_pagamento] = (pagamentosCount[v.forma_pagamento] || 0) + 1;
+      });
+      const topPagamento = Object.keys(pagamentosCount).reduce((a, b) => pagamentosCount[a] > pagamentosCount[b] ? a : b, 'Pix');
+
+      // Top Vendedor
+      const vendedorVendas = {};
+      vendas.forEach(v => {
+        const nome = v.vendedor_nome || 'Vendedor';
+        vendedorVendas[nome] = (vendedorVendas[nome] || 0) + Number(v.total);
+      });
+      const topVendedor = Object.keys(vendedorVendas).reduce((a, b) => vendedorVendas[a] > vendedorVendas[b] ? a : b, 'N/A');
+
+      let html = `<p><strong>Resumo de Saúde Financeira & Destaques:</strong></p><ul>`;
+      html += `<li>📈 <strong>Margem Líquida Real:</strong> <strong>${margemLiquidaPct}%</strong> (${lucroLiquido >= 0 ? 'Lucrativo' : 'Atenção aos Custos'}).</li>`;
+      html += `<li>🏷️ <strong>Ticket Médio por Venda:</strong> <strong>R$ ${ticketMedio}</strong> em ${vendas.length} transações finalizadas.</li>`;
+      html += `<li>💳 <strong>Forma de Pagamento Principal:</strong> <strong>${topPagamento}</strong> (${pagamentosCount[topPagamento]} vendas). Maior liquidez imediata.</li>`;
+      html += `<li>🏆 <strong>Líder em Vendas:</strong> <strong>${topVendedor}</strong> gerou R$ ${Number(vendedorVendas[topVendedor] || 0).toFixed(2)} em faturamento.</li>`;
+      html += `</ul>`;
+
+      target.innerHTML = html;
+    }
+
+    // --- RELATÓRIO DE VENDEDORES & COMISSÕES ---
+
+    function renderizarRelatorioVendedores() {
+      const tbody = document.getElementById('tabela-vendedores-comissoes');
+      if (!vendas || vendas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--color-text-muted);">Nenhuma venda registrada ainda.</td></tr>';
+        return;
+      }
+
+      const resumo = {};
+
+      vendas.forEach(v => {
+        const nome = v.vendedor_nome || 'Não Identificado';
+        if (!resumo[nome]) {
+          resumo[nome] = { qtd: 0, total: 0, comissao: 0 };
+        }
+        resumo[nome].qtd += 1;
+        resumo[nome].total += Number(v.total);
+        resumo[nome].comissao += Number(v.comissao_total || 0);
+      });
+
+      tbody.innerHTML = Object.keys(resumo).map(vendedor => `
+        <tr>
+          <td><strong>${vendedor}</strong></td>
+          <td>${resumo[vendedor].qtd} vendas</td>
+          <td style="color: var(--color-primary); font-weight:700;">R$ ${resumo[vendedor].total.toFixed(2)}</td>
+          <td style="color: var(--color-alert-warning); font-weight:700;">R$ ${resumo[vendedor].comissao.toFixed(2)}</td>
+        </tr>
+      `).join('');
+    }
+
+    // --- VENDAS & PDV ---
+
+    function iniciarSessaoVenda() {
+      vendaSessaoAtiva = true;
+      document.getElementById('venda-state-closed').style.display = 'none';
+      document.getElementById('venda-state-open').style.display = 'block';
+      document.getElementById('pdv-bar').style.display = 'flex';
+      renderizarVendas();
+    }
+
+    function renderizarVendas() {
+      const grid = document.getElementById('grid-vendas-produtos');
+      if (!vendaSessaoAtiva) return;
+
+      const filtrados = categoriaFiltroVendas === 'Todos' ? produtos : produtos.filter(p => p.categoria === categoriaFiltroVendas);
+      
+      grid.innerHTML = filtrados.map(p => `
+        <div class="product-card ${p.estoque <= 5 ? (p.estoque === 0 ? 'danger' : 'warning') : ''}" onclick="adicionarAoCarrinho('${p.id}')">
+          <div class="product-category">${p.categoria}</div>
+          <div class="product-name">${p.nome}</div>
+          <div class="product-price">R$ ${Number(p.preco).toFixed(2)}</div>
+          <div class="product-stock">Estoque: <strong>${p.estoque} un.</strong></div>
+        </div>
+      `).join('');
+    }
+
+    function filtrarVendasCategoria(cat, el) {
+      categoriaFiltroVendas = cat;
+      document.querySelectorAll('#vendas-categorias .pill').forEach(p => p.classList.remove('active'));
+      if (el) el.classList.add('active');
+      renderizarVendas();
+    }
+
+    function adicionarAoCarrinho(id) {
+      const prod = produtos.find(p => p.id === id);
+      if (!prod || prod.estoque <= 0) return alert('Produto indisponível ou sem estoque!');
+
+      const itemExistente = carrinho.find(c => c.produto_id === id);
+      if (itemExistente) {
+        if (itemExistente.quantidade >= prod.estoque) {
+          return alert('Quantidade máxima disponível em estoque atingida.');
+        }
+        itemExistente.quantidade++;
+      } else {
+        carrinho.push({
+          produto_id: prod.id,
+          nome: prod.nome,
+          preco: Number(prod.preco),
+          custo: Number(prod.custo),
+          comissao: Number(prod.comissao),
+          quantidade: 1
+        });
+      }
+      atualizarCarrinhoBar();
+    }
+
+    function alterarQtdCarrinho(id, delta) {
+      const idx = carrinho.findIndex(c => c.produto_id === id);
+      if (idx === -1) return;
+
+      const item = carrinho[idx];
+      const prod = produtos.find(p => p.id === id);
+
+      if (delta > 0 && item.quantidade >= prod.estoque) {
+        return alert('Limite de estoque atingido.');
+      }
+
+      item.quantidade += delta;
+      if (item.quantidade <= 0) {
+        carrinho.splice(idx, 1);
+      }
+      atualizarCarrinhoBar();
+      verCarrinhoDetalhes();
+    }
+
+    function removerItemCarrinho(id) {
+      carrinho = carrinho.filter(c => c.produto_id !== id);
+      atualizarCarrinhoBar();
+      verCarrinhoDetalhes();
+    }
+
+    function atualizarCarrinhoBar() {
+      const totalItens = carrinho.reduce((s, i) => s + i.quantidade, 0);
+      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+
+      document.getElementById('cart-count').innerText = totalItens;
+      document.getElementById('cart-total').innerText = `R$ ${valorTotal.toFixed(2)}`;
+    }
+
+    function verCarrinhoDetalhes() {
+      const lista = document.getElementById('carrinho-itens-lista');
+      if (carrinho.length === 0) {
+        lista.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">Nenhum produto no carrinho.</p>';
+      } else {
+        lista.innerHTML = carrinho.map(item => `
+          <div class="cart-item-row">
+            <div class="cart-item-info">
+              <span class="cart-item-title">${item.nome}</span>
+              <span class="cart-item-sub">R$ ${item.preco.toFixed(2)} x ${item.quantidade} = R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
+            </div>
+            <div class="cart-item-controls">
+              <button class="btn-qty" onclick="alterarQtdCarrinho('${item.produto_id}', -1)">-</button>
+              <span style="font-weight: bold; width: 20px; text-align: center;">${item.quantidade}</span>
+              <button class="btn-qty" onclick="alterarQtdCarrinho('${item.produto_id}', 1)">+</button>
+              <button class="btn-qty" style="color: var(--color-alert-danger);" onclick="removerItemCarrinho('${item.produto_id}')">🗑️</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+      document.getElementById('carrinho-modal-total').innerText = `R$ ${valorTotal.toFixed(2)}`;
+      document.getElementById('modal-carrinho').classList.add('active');
+    }
+
+    function abrirModalFinalizarVenda() {
+      if (carrinho.length === 0) return alert('Adicione pelo menos um produto ao carrinho.');
+      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
+      document.getElementById('venda-valor-final').value = valorTotal.toFixed(2);
+      document.getElementById('modal-venda').classList.add('active');
+    }
+
+    async function confirmarVendaBD() {
+      const valorFinal = parseFloat(document.getElementById('venda-valor-final').value);
+      const pagamento = document.getElementById('venda-pagamento').value;
+      const comissaoTotal = carrinho.reduce((sum, item) => sum + (item.comissao * item.quantidade), 0);
+
+      const { data, error } = await db.from('vendas').insert([{
+        vendedor_id: usuarioAtual ? usuarioAtual.id : 'usr-anon',
+        vendedor_nome: usuarioAtual ? usuarioAtual.nome : 'Vendedor',
+        total: valorFinal,
+        comissao_total: comissaoTotal,
+        forma_pagamento: pagamento,
+        itens: carrinho
+      }]);
+
+      if (error) {
+        return alert('Erro ao salvar venda no banco de dados. Tente novamente.');
+      }
+
+      for (let item of carrinho) {
+        const prod = produtos.find(p => p.id === item.produto_id);
+        if (prod) {
+          const novoEstoque = Math.max(0, prod.estoque - item.quantidade);
+          await db.from('produtos').update({ estoque: novoEstoque }).eq('id', prod.id);
+        }
+      }
+
+      alert('Venda gravada com sucesso!');
+      carrinho = [];
+      atualizarCarrinhoBar();
+      fecharModais();
+      await carregarProdutos();
+      await carregarVendas();
+      renderizarVendas();
+      renderizarEstoque();
+      atualizarFinanceiro();
+      renderizarHistoricoVendas();
+      renderizarRelatorioVendedores();
+      gerarDiagnosticoEstoqueIA();
+      gerarDiagnosticoFinanceiroIA();
+    }
+
+    function fecharCaixaDoDia() {
+      if (confirm('Deseja realmente fechar o caixa do dia?')) {
+        vendaSessaoAtiva = false;
+        carrinho = [];
+        atualizarCarrinhoBar();
+        document.getElementById('venda-state-closed').style.display = 'block';
+        document.getElementById('venda-state-open').style.display = 'none';
+        document.getElementById('pdv-bar').style.display = 'none';
+        alert('Caixa do dia fechado com sucesso.');
+      }
+    }
+
+    // --- REMOÇÃO E RESET DE VENDAS (SÓ ADM) ---
+
+    function renderizarHistoricoVendas() {
+      const div = document.getElementById('lista-historico-vendas');
+      if (!vendas || vendas.length === 0) {
+        div.innerHTML = '<p style="font-size: 0.8rem; color: var(--color-text-muted);">Nenhuma venda registrada até o momento.</p>';
+        return;
+      }
+
+      const eAdm = usuarioAtual && usuarioAtual.cargo === 'ADM';
+
+      div.innerHTML = vendas.slice(0, 20).map(v => {
+        const dataStr = new Date(v.created_at).toLocaleString('pt-BR');
+        return `
+          <div class="venda-row">
+            <div class="user-info-text">
+              <span class="user-name-title">R$ ${Number(v.total).toFixed(2)} (${v.forma_pagamento})</span>
+              <span class="user-email-sub">${dataStr} • Vendedor: ${v.vendedor_nome || 'N/A'}</span>
+            </div>
+            ${eAdm ? `
+              <button class="btn btn-danger btn-sm" onclick="excluirVendaIndividual('${v.id}')" title="Remover esta Venda Teste">🗑️ Excluir Venda</button>
+            ` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function excluirVendaIndividual(vendaId) {
+      if (!confirm('Deseja realmente excluir esta venda? O valor será removido do relatório financeiro.')) return;
+
+      const { error } = await db.from('vendas').delete().eq('id', vendaId);
+      if (error) {
+        return alert('Erro ao excluir venda.');
+      }
+
+      alert('Venda removida com sucesso!');
+      await carregarVendas();
+      atualizarFinanceiro();
+      renderizarHistoricoVendas();
+      renderizarRelatorioVendedores();
+      gerarDiagnosticoFinanceiroIA();
+    }
+
+    async function resetarTodasVendasTotalmente() {
+      if (!confirm('🚨 ATENÇÃO ADMINISTRADOR!\n\nEsta ação irá APAGAR TODAS AS VENDAS E DESPESAS do banco de dados para você reiniciar seus testes do zero.\n\nTem certeza absoluta?')) return;
+
+      const palavra = prompt('Para confirmar a exclusão TOTAL, digite "ZERAR" abaixo:');
+      if (palavra !== 'ZERAR') {
+        return alert('Ação cancelada. Palavra de confirmação incorreta.');
+      }
+
+      await db.from('vendas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await db.from('despesas_extras').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+
+      alert('🧹 Reset Concluído! Todas as vendas e registros de testes foram zerados.');
+      await carregarVendas();
+      await carregarDespesasExtras();
+      atualizarFinanceiro();
+      renderizarHistoricoVendas();
+      renderizarRelatorioVendedores();
+      gerarDiagnosticoFinanceiroIA();
+    }
+
+    // --- ESTOQUE ---
+
+    function renderizarEstoque() {
+      const grid = document.getElementById('grid-estoque-produtos');
+      const eAdm = usuarioAtual && usuarioAtual.cargo === 'ADM';
+
+      grid.innerHTML = produtos.map(p => `
+        <div class="product-card ${p.estoque <= 5 ? (p.estoque === 0 ? 'danger' : 'warning') : ''}">
+          ${eAdm ? `
+          <div class="product-card-actions">
+            <button class="btn-card-action" onclick="editarProduto('${p.id}')" title="Editar Produto">✏️</button>
+            <button class="btn-card-action" style="color:var(--color-alert-danger);" onclick="excluirProduto('${p.id}')" title="Excluir">🗑️</button>
+          </div>` : ''}
+          <div class="product-category">${p.categoria}</div>
+          <div class="product-name">${p.nome}</div>
+          <div class="product-price">R$ ${Number(p.preco).toFixed(2)}</div>
+          <div class="product-stock">Custo: R$ ${Number(p.custo).toFixed(2)} | Comis.: R$ ${Number(p.comissao).toFixed(2)}</div>
+          <div class="qty-controls">
+            <button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', -1)">-</button>
+            <span style="font-weight:bold; width: 30px; text-align: center;">${p.estoque}</span>
+            <button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', 1)">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function alterarEstoqueDirect(id, delta) {
+      const prod = produtos.find(p => p.id === id);
+      if (!prod) return;
+      const novoSaldo = Math.max(0, prod.estoque + delta);
+      await db.from('produtos').update({ estoque: novoSaldo }).eq('id', id);
+      await carregarProdutos();
+      renderizarEstoque();
+      renderizarVendas();
+      gerarDiagnosticoEstoqueIA();
+    }
+
+    function editarProduto(id) {
+      const prod = produtos.find(p => p.id === id);
+      if (!prod) return;
+
+      document.getElementById('modal-produto-titulo').innerText = 'Editar Produto';
+      document.getElementById('prod-id').value = prod.id;
+      document.getElementById('prod-nome').value = prod.nome;
+      document.getElementById('prod-categoria').value = prod.categoria;
+      document.getElementById('prod-custo').value = prod.custo;
+      document.getElementById('prod-preco').value = prod.preco;
+      document.getElementById('prod-comissao').value = prod.comissao;
+      document.getElementById('prod-qtd').value = prod.estoque;
+
+      document.getElementById('modal-produto').classList.add('active');
+    }
+
+    async function excluirProduto(id) {
+      if (confirm('Tem certeza que deseja excluir este produto do estoque?')) {
+        await db.from('produtos').delete().eq('id', id);
+        await carregarProdutos();
+        renderizarEstoque();
+        renderizarVendas();
+        gerarDiagnosticoEstoqueIA();
+      }
+    }
+
+    async function salvarProduto() {
+      const id = document.getElementById('prod-id').value;
+      const nome = document.getElementById('prod-nome').value.trim();
+      const categoria = document.getElementById('prod-categoria').value;
+      const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
+      const preco = parseFloat(document.getElementById('prod-preco').value) || 0;
+      const comissao = parseFloat(document.getElementById('prod-comissao').value) || 0;
+      const estoque = parseInt(document.getElementById('prod-qtd').value) || 0;
+
+      if (!nome) return alert('Por favor, informe o nome do produto.');
+
+      if (id) {
+        await db.from('produtos').update({ nome, categoria, custo, preco, comissao, estoque }).eq('id', id);
+      } else {
+        await db.from('produtos').insert([{ nome, categoria, custo, preco, comissao, estoque }]);
+      }
+
+      fecharModais();
+      await carregarProdutos();
+      renderizarEstoque();
+      renderizarVendas();
+      gerarDiagnosticoEstoqueIA();
+    }
+
+    // --- FINANCEIRO & GRÁFICOS ---
+
+    async function atualizarFinanceiro() {
+      const faturamento = vendas.reduce((s, v) => s + Number(v.total), 0);
+      const comissoes = vendas.reduce((s, v) => s + Number(v.comissao_total), 0);
+      const cmvEstoque = faturamento * 0.45;
+      const despesas = despesasExtras.filter(d => d.tipo === 'saida').reduce((s, d) => s + Number(d.valor), 0);
+      const entradas = despesasExtras.filter(d => d.tipo === 'entrada').reduce((s, d) => s + Number(d.valor), 0);
+
+      const lucroReal = faturamento + entradas - cmvEstoque - comissoes - despesas;
+
+      document.getElementById('stat-faturamento').innerText = `R$ ${faturamento.toFixed(2)}`;
+      document.getElementById('stat-cmv').innerText = `R$ ${cmvEstoque.toFixed(2)}`;
+      document.getElementById('stat-comissoes').innerText = `R$ ${comissoes.toFixed(2)}`;
+      document.getElementById('stat-despesas').innerText = `R$ ${despesas.toFixed(2)}`;
+      document.getElementById('stat-lucro').innerText = `R$ ${lucroReal.toFixed(2)}`;
+    }
+
+    function renderizarGrafico() {
+      const tipo = document.getElementById('select-grafico-tipo').value;
+      const ctx = document.getElementById('chartFinanceiro').getContext('2d');
+      if (chartInstance) chartInstance.destroy();
+
+      let labels = [];
+      let dataValues = [];
+      let chartType = 'bar';
+
+      if (tipo === 'dia') {
+        const vendasPorDia = {};
+        vendas.forEach(v => {
+          const dia = new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+          vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(v.total);
+        });
+        labels = Object.keys(vendasPorDia).slice(-10);
+        dataValues = Object.values(vendasPorDia).slice(-10);
+      } else if (tipo === 'mes') {
+        labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        dataValues = new Array(12).fill(0);
+        vendas.forEach(v => {
+          const m = new Date(v.created_at).getMonth();
+          dataValues[m] += Number(v.total);
+        });
+      } else if (tipo === 'pagamento') {
+        chartType = 'doughnut';
+        const fp = { 'Pix': 0, 'Dinheiro': 0, 'Débito': 0, 'Crédito': 0 };
+        vendas.forEach(v => {
+          if (fp[v.forma_pagamento] !== undefined) fp[v.forma_pagamento] += Number(v.total);
+        });
+        labels = Object.keys(fp);
+        dataValues = Object.values(fp);
+      }
+
+      chartInstance = new Chart(ctx, {
+        type: chartType,
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Faturamento (R$)',
+            data: dataValues,
+            backgroundColor: chartType === 'doughnut' ? ['#32D704', '#FF9800', '#2196F3', '#9C27B0'] : '#32D704'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: chartType === 'doughnut' } }
+        }
+      });
+    }
+
+    async function salvarDespesaExtra() {
+      const tipo = document.getElementById('despesa-tipo').value;
+      const descricao = document.getElementById('despesa-descricao').value.trim();
+      const valor = parseFloat(document.getElementById('despesa-valor').value) || 0;
+
+      if (!descricao || valor <= 0) return alert('Preencha a descrição e um valor válido.');
+
+      await db.from('despesas_extras').insert([{ tipo, descricao, valor }]);
+      fecharModais();
+      await carregarDespesasExtras();
+      atualizarFinanceiro();
+      gerarDiagnosticoFinanceiroIA();
+    }
+
+    // --- EQUIPE ---
+
+    function renderizarEquipe() {
+      const divPendentes = document.getElementById('lista-solicitacoes-pendentes');
+      const divAtivos = document.getElementById('lista-equipe-ativos');
+
+      const pendentes = usuariosList.filter(u => u.status === 'pendente');
+      const ativos = usuariosList.filter(u => u.status !== 'pendente');
+
+      if (pendentes.length === 0) {
+        divPendentes.innerHTML = '<p style="font-size:0.8rem; color:var(--color-text-muted);">Nenhuma solicitação de cadastro pendente.</p>';
+      } else {
+        divPendentes.innerHTML = pendentes.map(u => `
+          <div class="user-row" style="border-left: 3px solid var(--color-alert-warning);">
+            <div class="user-info-text">
+              <span class="user-name-title">${u.nome}</span>
+              <span class="user-email-sub">${u.email}</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm" onclick="aprovarUsuario('${u.id}')">Aprovar</button>
+              <button class="btn btn-danger btn-sm" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      divAtivos.innerHTML = ativos.map(u => `
+        <div class="user-row">
+          <div class="user-info-text">
+            <span class="user-name-title">${u.nome} ${u.email === EMAIL_ADMIN_ME ? '⭐ (Dono)' : ''}</span>
+            <span class="user-email-sub">${u.email} • <strong>${u.cargo}</strong></span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn btn-secondary btn-sm" onclick="abrirModalRedefinirSenhaUsuario('${u.id}', '${u.nome}')" title="Redefinir Senha">🔑 Senha</button>
+            <span class="badge-role" style="${u.status === 'bloqueado' ? 'background:rgba(229,57,53,0.2); color:#E53935;' : ''}">
+              ${u.status === 'ativo' ? 'Ativo' : 'Bloqueado'}
+            </span>
+            ${u.email !== EMAIL_ADMIN_ME ? `
+              <button class="btn ${u.status === 'ativo' ? 'btn-danger' : 'btn-secondary'} btn-sm" onclick="alternarStatusUsuario('${u.id}', '${u.status}')">
+                ${u.status === 'ativo' ? '🚫 Bloquear' : '✅ Desbloquear'}
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function aprovarUsuario(id) {
+      await db.from('perfis_usuarios').update({ status: 'ativo' }).eq('id', id);
+      await carregarUsuarios();
+      renderizarEquipe();
+    }
+
+    async function rejeitarUsuario(id) {
+      if (confirm('Deseja rejeitar e remover esta solicitação?')) {
+        await db.from('perfis_usuarios').delete().eq('id', id);
+        await carregarUsuarios();
+        renderizarEquipe();
+      }
+    }
+
+    async function alternarStatusUsuario(id, statusAtual) {
+      const novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
+      const { error } = await db.from('perfis_usuarios').update({ status: novoStatus }).eq('id', id);
+      if (error) {
+        return alert('Erro ao alterar status do colaborador.');
+      }
+      alert(`Status do usuário alterado para: ${novoStatus.toUpperCase()}`);
+      await carregarUsuarios();
+      renderizarEquipe();
+    }
+
+    function abrirModalRedefinirSenhaUsuario(id, nome) {
+      document.getElementById('reset-user-id').value = id;
+      document.getElementById('reset-user-nome').value = nome;
+      document.getElementById('reset-nova-senha-adm').value = '';
+      document.getElementById('modal-alterar-senha-adm').classList.add('active');
+    }
+
+    async function salvarNovaSenhaUsuarioAdm() {
+      const id = document.getElementById('reset-user-id').value;
+      const novaSenha = document.getElementById('reset-nova-senha-adm').value;
+
+      if (!novaSenha || novaSenha.length < 6) {
+        return alert('Digite uma nova senha com pelo menos 6 caracteres.');
+      }
+
+      await db.from('perfis_usuarios').update({ senha: novaSenha }).eq('id', id);
+      alert('Senha do colaborador redefinida com sucesso!');
+      fecharModais();
+      await carregarUsuarios();
+      renderizarEquipe();
+    }
+
+    async function salvarNovoUsuario() {
+      const nome = document.getElementById('usr-nome').value.trim();
+      const email = document.getElementById('usr-email').value.trim();
+      const senha = document.getElementById('usr-senha').value;
+      const cargo = document.getElementById('usr-cargo').value;
+
+      if (!nome || !email) return alert('Preencha o nome e o e-mail do colaborador.');
+
+      await db.from('perfis_usuarios').insert([{ nome, email, senha, cargo, status: 'ativo' }]);
+      fecharModais();
+      await carregarUsuarios();
+      renderizarEquipe();
+    }
+
+    // --- MODAIS GERAIS ---
+
+    function fecharModais() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
+    }
+
+    function abrirModalProduto() {
+      document.getElementById('modal-produto-titulo').innerText = 'Cadastrar Produto';
+      document.getElementById('prod-id').value = '';
+      document.getElementById('prod-nome').value = '';
+      document.getElementById('prod-custo').value = '';
+      document.getElementById('prod-preco').value = '';
+      document.getElementById('prod-comissao').value = '';
+      document.getElementById('prod-qtd').value = '';
+      document.getElementById('modal-produto').classList.add('active');
+    }
+
+    function abrirModalNovoUsuario() {
+      document.getElementById('modal-usuario').classList.add('active');
+    }
+
+    function abrirModalDespesaExtra() {
+      document.getElementById('modal-despesa').classList.add('active');
+    }
+
+    function abrirConfiguracoes() {
+      document.getElementById('modal-configuracoes').classList.add('active');
+    }
+  </script>
+</body>
+</html>
