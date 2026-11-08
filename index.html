@@ -333,6 +333,86 @@
     }
     .auth-tab-btn.active { color: var(--color-primary); border-bottom-color: var(--color-primary); }
     .link-forgot { font-size: 0.8rem; color: var(--color-primary); text-decoration: none; cursor: pointer; display: inline-block; margin-top: 8px; }
+
+
+    /* HEND DRINKS — CAMADA DE REFINAMENTO RESPONSIVO */
+    html { scroll-behavior: smooth; }
+    body { -webkit-font-smoothing: antialiased; user-select: text; }
+    button, .btn, .tab-btn, .pill { user-select: none; }
+    button, input, select { font: inherit; }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible {
+      outline: 2px solid var(--color-primary); outline-offset: 3px;
+    }
+    ::selection { background: rgba(50,215,4,.28); color: var(--color-text-main); }
+    .app-header { min-height: 64px; backdrop-filter: blur(14px); }
+    .brand-title { letter-spacing: .08em; }
+    .container { padding: clamp(14px, 2.2vw, 26px); }
+    .tab-content > h2, .tab-content h2 { font-family: var(--font-title); letter-spacing: -.025em; }
+    .btn, .btn-icon, .btn-card-action, .btn-qty, .tab-btn, .pill { -webkit-tap-highlight-color: transparent; }
+    .btn { min-height: 42px; box-shadow: 0 5px 14px rgba(0,0,0,.12); }
+    .btn:active, .btn-icon:active, .btn-qty:active { transform: translateY(1px) scale(.98); }
+    .stat-card, .product-card, .modal-card, .ai-box { box-shadow: 0 10px 28px rgba(0,0,0,.10); }
+    .stat-card { transition: transform .18s ease, border-color .18s ease; }
+    .stat-card:hover { transform: translateY(-2px); border-color: rgba(50,215,4,.45); }
+    .product-card { min-height: 166px; overflow-wrap: anywhere; }
+    .product-card:hover { border-color: rgba(50,215,4,.5); }
+    .product-name { line-height: 1.4; }
+    .ai-box { background: linear-gradient(135deg, rgba(50,215,4,.09), var(--color-card-dark) 72%); }
+    .modal-overlay { backdrop-filter: blur(5px); }
+    .modal-card { box-shadow: 0 24px 80px rgba(0,0,0,.35); }
+    .form-control { width: 100%; min-height: 42px; }
+    .vendedor-table { min-width: 540px; }
+    .user-row, .venda-row { flex-wrap: wrap; }
+    .user-row > div:last-child { flex-wrap: wrap; }
+    .nav-tabs { padding: 9px max(8px, env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); }
+    .pdv-footer { padding-bottom: calc(12px + env(safe-area-inset-bottom)); gap: 12px; }
+    .pdv-footer .btn { white-space: nowrap; }
+    .empty-state { padding: 28px 16px; text-align: center; color: var(--color-text-muted); }
+    .status-note { font-size: .78rem; color: var(--color-text-muted); line-height: 1.5; }
+    body.light-mode .ai-box { background: linear-gradient(135deg, rgba(50,215,4,.10), #fff 72%); }
+    @media (min-width: 900px) {
+      .container { padding-top: 28px; }
+      .grid-products { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+      .stats-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+      .stats-grid .stat-card[style*="grid-column"] { grid-column: span 1 !important; }
+      .nav-tabs { left: 50%; right: auto; transform: translateX(-50%); width: min(680px, calc(100% - 32px)); border: 1px solid var(--color-border-dark); border-bottom: 0; border-radius: 16px 16px 0 0; }
+    }
+    @media (max-width: 600px) {
+      .app-header { padding: 10px 13px; }
+      .brand-logo-img { height: 32px !important; max-width: 46px; }
+      .brand-title { font-size: .98rem; }
+      .user-badge { font-size: .68rem; }
+      .badge-role { font-size: .62rem; }
+      .container { padding: 13px 12px 20px; }
+      .venda-start-box { padding: 30px 16px; }
+      .venda-start-box h2 { font-size: 1.35rem; }
+      .grid-products { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .product-card { padding: 11px; min-height: 156px; }
+      .product-name { font-size: .82rem; }
+      .product-price { font-size: 1rem; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .stats-grid .stat-card[style*="grid-column"] { grid-column: span 2 !important; }
+      .stat-value { font-size: 1.08rem; }
+      .pdv-footer { bottom: calc(58px + env(safe-area-inset-bottom)); padding: 9px 11px; align-items: center; }
+      .pdv-footer .btn { padding: 9px 10px; font-size: .72rem; }
+      .cart-total { font-size: 1.08rem; }
+      .tab-btn { font-size: .67rem; }
+      .tab-btn span { font-size: 1.08rem; }
+      .ai-title { align-items: flex-start; gap: 10px; }
+      .ai-title strong { font-size: .88rem; }
+      .modal-card { padding: 18px 15px; }
+      .auth-tab-btn { padding: 9px 4px; font-size: .68rem; }
+    }
+    @media (max-width: 360px) {
+      .grid-products { grid-template-columns: 1fr; }
+      .header-actions { gap: 6px; }
+      .user-badge { max-width: 112px; overflow-wrap: anywhere; }
+      .pdv-footer .btn-secondary { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+
   </style>
   <!-- Dynamic Favicon & Web App Manifest for Home Screen Shortcut -->
   <link id="dynamic-favicon" rel="shortcut icon" href="">
@@ -841,6 +921,21 @@
 
     const EMAIL_ADMIN_ME = 'mathex.fire.0@gmail.com';
 
+    // Escape de conteúdo vindo do banco antes de inseri-lo em templates HTML.
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>\"']/g, ch => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+    const moeda = valor => Number(valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    function exigirAdmin() {
+      if (!usuarioAtual || usuarioAtual.cargo !== 'ADM') {
+        alert('Acesso restrito apenas para Administradores.');
+        return false;
+      }
+      return true;
+    }
+
     window.onload = async () => {
       carregarTemaSalvo();
       await verificarSessaoUsuario();
@@ -879,7 +974,7 @@
       // 1. Atualizar Logo no Cabeçalho
       const logoSlot = document.getElementById('logo-icon-slot');
       if (logoSlot) {
-        logoSlot.innerHTML = `<img src="${url}" class="brand-logo-img" alt="Logo" style="height: 38px; width: auto; object-fit: contain;">`;
+        logoSlot.innerHTML = `<img src="${url}" class="brand-logo-img" alt="Logo Hend Drinks" style="height: 38px; width: auto; object-fit: contain;" onerror="this.remove(); document.getElementById('default-logo-icon')?.removeAttribute('hidden');">`;
       }
 
       // 2. Atualizar Logo na Tela de Login/Cadastro
@@ -916,6 +1011,8 @@
       };
       const blob = new Blob([JSON.stringify(manifestObj)], { type: 'application/json' });
       const manifestURL = URL.createObjectURL(blob);
+      if (window.hendManifestURL) URL.revokeObjectURL(window.hendManifestURL);
+      window.hendManifestURL = manifestURL;
 
       let manifestLink = document.getElementById('dynamic-manifest');
       if (manifestLink) manifestLink.href = manifestURL;
@@ -924,46 +1021,47 @@
     // CORREÇÃO CRÍTICA DO BLOQUEIO: Consulta o Banco de Dados em tempo real
     async function verificarSessaoUsuario() {
       const sessaoRaw = localStorage.getItem('hend_user_session');
-      if (sessaoRaw) {
-        try {
-          const sessao = JSON.parse(sessaoRaw);
-          const seteDiasMs = 7 * 24 * 60 * 60 * 1000;
-          if (Date.now() - sessao.timestamp < seteDiasMs) {
-            
-            // Validação no Supabase para garantir se o usuário foi bloqueado
-            if (sessao.user && sessao.user.email !== EMAIL_ADMIN_ME) {
-              const { data: users, error } = await db.from('perfis_usuarios').select('*').eq('email', sessao.user.email);
-              if (error || !users || users.length === 0 || users[0].status === 'bloqueado' || users[0].status === 'pendente') {
-                alert('⚠️ Acesso Negado: Seu usuário foi BLOQUEADO ou está pendente pelo Administrador.');
-                fazerLogout();
-                return;
-              }
-              usuarioAtual = users[0]; // Usa o perfil atualizado do BD
-            } else {
-              usuarioAtual = sessao.user;
-            }
-
-            document.getElementById('auth-modal').classList.remove('active');
-            await inicializarAppComUsuario();
-            return;
-          }
-        } catch(e) {}
+      if (!sessaoRaw) {
+        document.getElementById('auth-modal').classList.add('active');
+        return;
       }
-      document.getElementById('auth-modal').classList.add('active');
+      try {
+        const sessao = JSON.parse(sessaoRaw);
+        const seteDiasMs = 7 * 24 * 60 * 60 * 1000;
+        if (!sessao?.user?.email || !sessao.timestamp || Date.now() - sessao.timestamp >= seteDiasMs) {
+          fazerLogout();
+          return;
+        }
+        const { data: perfil, error } = await db.from('perfis_usuarios')
+          .select('id,nome,email,cargo,status')
+          .eq('email', sessao.user.email).maybeSingle();
+        if (error || !perfil || perfil.status !== 'ativo') {
+          localStorage.removeItem('hend_user_session');
+          document.getElementById('auth-modal').classList.add('active');
+          alert('Sua sessão expirou ou seu acesso não está ativo. Entre novamente.');
+          return;
+        }
+        usuarioAtual = perfil;
+        document.getElementById('auth-modal').classList.remove('active');
+        await inicializarAppComUsuario();
+      } catch (e) {
+        console.error('Falha ao validar sessão:', e);
+        localStorage.removeItem('hend_user_session');
+        document.getElementById('auth-modal').classList.add('active');
+      }
     }
 
     async function inicializarAppComUsuario() {
       document.getElementById('current-user-name').innerText = usuarioAtual.nome;
       document.getElementById('current-user-role').innerText = usuarioAtual.cargo;
 
-      if (usuarioAtual.cargo === 'Vendedor') {
-        document.getElementById('btn-novo-produto').style.display = 'none';
-        document.getElementById('btn-reset-total-vendas').style.display = 'none';
-        // Garantir que a aba inicial para o vendedor seja sempre Vendas
-        mudarAba('vendas');
-      } else if (usuarioAtual.cargo === 'ADM') {
-        document.getElementById('btn-reset-total-vendas').style.display = 'inline-flex';
-      }
+      const eAdm = usuarioAtual.cargo === 'ADM';
+      document.getElementById('btn-novo-produto').style.display = eAdm ? 'inline-flex' : 'none';
+      document.getElementById('btn-reset-total-vendas').style.display = eAdm ? 'inline-flex' : 'none';
+      document.querySelectorAll('.nav-tabs .tab-btn').forEach((btn, index) => {
+        btn.style.display = (eAdm || index === 0) ? 'flex' : 'none';
+      });
+      mudarAba('vendas', document.querySelector('.nav-tabs .tab-btn'));
 
       await carregarProdutos();
       await carregarVendas();
@@ -1023,16 +1121,8 @@
 
       const { data: users, error } = await db.from('perfis_usuarios').select('*').eq('email', email);
 
-      if (error || !users || users.length === 0) {
-        if (email === EMAIL_ADMIN_ME) {
-          usuarioAtual = { id: 'usr-admin-me', nome: 'Administrador Principal', email: EMAIL_ADMIN_ME, cargo: 'ADM', status: 'ativo' };
-          salvarSessao(usuarioAtual);
-          document.getElementById('auth-modal').classList.remove('active');
-          inicializarAppComUsuario();
-          return;
-        }
-        return alert('Usuário não encontrado. Verifique seu e-mail ou peça um cadastro.');
-      }
+      if (error) return alert('Não foi possível conectar ao banco de dados. Verifique a conexão e tente novamente.');
+      if (!users || users.length === 0) return alert('Usuário não encontrado. Verifique seu e-mail ou peça um cadastro.');
 
       const usr = users[0];
       if (usr.senha !== senha) {
@@ -1047,8 +1137,8 @@
         return alert('⛔ ACESSO BLOQUEADO: Seu usuário foi bloqueado pelo Administrador.');
       }
 
-      usuarioAtual = usr;
-      salvarSessao(usr);
+      usuarioAtual = { id: usr.id, nome: usr.nome, email: usr.email, cargo: usr.cargo, status: usr.status };
+      salvarSessao(usuarioAtual);
       document.getElementById('auth-modal').classList.remove('active');
       inicializarAppComUsuario();
     }
@@ -1105,10 +1195,8 @@
     }
 
     function salvarSessao(usr) {
-      localStorage.setItem('hend_user_session', JSON.stringify({
-        user: usr,
-        timestamp: Date.now()
-      }));
+      const perfilSeguro = { id: usr.id, nome: usr.nome, email: usr.email, cargo: usr.cargo, status: usr.status };
+      localStorage.setItem('hend_user_session', JSON.stringify({ user: perfilSeguro, timestamp: Date.now() }));
     }
 
     function fazerLogout() {
@@ -1144,7 +1232,8 @@
     // --- NAVEGAÇÃO DE ABAS ---
 
     function mudarAba(aba, el) {
-      if (usuarioAtual && usuarioAtual.cargo === 'Vendedor' && (aba === 'financeiro' || aba === 'equipe' || aba === 'estoque')) {
+      if (!['vendas', 'estoque', 'financeiro', 'equipe'].includes(aba)) return;
+      if (usuarioAtual && usuarioAtual.cargo !== 'ADM' && aba !== 'vendas') {
         return alert('Acesso restrito apenas para Administradores.');
       }
 
@@ -1196,9 +1285,9 @@
         return;
       }
 
-      const zerados = produtos.filter(p => p.estoque === 0);
-      const criticos = produtos.filter(p => p.estoque > 0 && p.estoque <= 5);
-      const altaMargem = [...produtos].sort((a,b) => (b.preco - b.custo) - (a.preco - a.custo))[0];
+      const zerados = produtos.filter(p => Number(p.estoque) === 0);
+      const criticos = produtos.filter(p => Number(p.estoque) > 0 && Number(p.estoque) <= 5);
+      const altaMargem = [...produtos].sort((a,b) => ((Number(b.preco)-Number(b.custo)-Number(b.comissao)) - (Number(a.preco)-Number(a.custo)-Number(a.comissao))))[0];
 
       let html = `<p><strong>Análise de Reposição & Giro de Estoque:</strong></p><ul>`;
 
@@ -1209,13 +1298,13 @@
       }
 
       if (criticos.length > 0) {
-        html += `<li style="color:var(--color-alert-warning);">⚠️ <strong>NÍVEL CRÍTICO (≤5 un):</strong> ${criticos.map(p => `${p.nome} (${p.estoque} un)`).join(', ')}. Sugere-se pedido de reposição.</li>`;
+        html += `<li style="color:var(--color-alert-warning);">⚠️ <strong>NÍVEL CRÍTICO (≤5 un):</strong> ${criticos.map(p => `${escapeHtml(p.nome)} (${p.estoque} un)`).join(', ')}. Sugere-se pedido de reposição.</li>`;
       } else {
         html += `<li>📦 Níveis de estoque regularizados acima do limite mínimo de segurança.</li>`;
       }
 
       if (altaMargem) {
-        const margemLucro = (((altaMargem.preco - altaMargem.custo) / altaMargem.preco) * 100).toFixed(0);
+        const margemLucro = (Number(altaMargem.preco) > 0 ? ((Number(altaMargem.preco) - Number(altaMargem.custo) - Number(altaMargem.comissao)) / Number(altaMargem.preco)) * 100 : 0).toFixed(0);
         html += `<li>💡 <strong>DESTAQUE DE MARGEM:</strong> <strong>${altaMargem.nome}</strong> gera a maior margem líquida da distribuidora (<strong>${margemLucro}% de lucro</strong> por unidade). Garanta estoque no final de semana!</li>`;
       }
 
@@ -1233,7 +1322,9 @@
       const faturamento = vendas.reduce((s, v) => s + Number(v.total), 0);
       const comissoes = vendas.reduce((s, v) => s + Number(v.comissao_total), 0);
       const despesas = despesasExtras.filter(d => d.tipo === 'saida').reduce((s, d) => s + Number(d.valor), 0);
-      const cmvEstoque = faturamento * 0.45;
+      const cmvEstoque = vendas.reduce((total, venda) => total + (Array.isArray(venda.itens)
+        ? venda.itens.reduce((soma, item) => soma + Number(item.custo || 0) * Number(item.quantidade || 0), 0)
+        : 0), 0);
       const lucroLiquido = faturamento - cmvEstoque - comissoes - despesas;
       const margemLiquidaPct = faturamento > 0 ? ((lucroLiquido / faturamento) * 100).toFixed(1) : '0';
       const ticketMedio = faturamento > 0 ? (faturamento / vendas.length).toFixed(2) : '0.00';
@@ -1256,8 +1347,9 @@
       let html = `<p><strong>Resumo de Saúde Financeira & Destaques:</strong></p><ul>`;
       html += `<li>📈 <strong>Margem Líquida Real:</strong> <strong>${margemLiquidaPct}%</strong> (${lucroLiquido >= 0 ? 'Lucrativo' : 'Atenção aos Custos'}).</li>`;
       html += `<li>🏷️ <strong>Ticket Médio por Venda:</strong> <strong>R$ ${ticketMedio}</strong> em ${vendas.length} transações finalizadas.</li>`;
-      html += `<li>💳 <strong>Forma de Pagamento Principal:</strong> <strong>${topPagamento}</strong> (${pagamentosCount[topPagamento]} vendas). Maior liquidez imediata.</li>`;
-      html += `<li>🏆 <strong>Líder em Vendas:</strong> <strong>${topVendedor}</strong> gerou R$ ${Number(vendedorVendas[topVendedor] || 0).toFixed(2)} em faturamento.</li>`;
+      html += `<li>💳 <strong>Forma de Pagamento Principal:</strong> <strong>${escapeHtml(topPagamento)}</strong> (${pagamentosCount[topPagamento]} vendas). Maior liquidez imediata.</li>`;
+      html += `<li>🏆 <strong>Líder em Vendas:</strong> <strong>${escapeHtml(topVendedor)}</strong> gerou R$ ${Number(vendedorVendas[topVendedor] || 0).toFixed(2)} em faturamento.</li>`;
+      html += `<li>ℹ️ <strong>Base do cálculo:</strong> CMV calculado pelo custo e quantidade registrados nos itens de cada venda. Vendas antigas sem custo salvo podem apresentar CMV incompleto.</li>`;
       html += `</ul>`;
 
       target.innerHTML = html;
@@ -1286,7 +1378,7 @@
 
       tbody.innerHTML = Object.keys(resumo).map(vendedor => `
         <tr>
-          <td><strong>${vendedor}</strong></td>
+          <td><strong>${escapeHtml(vendedor)}</strong></td>
           <td>${resumo[vendedor].qtd} vendas</td>
           <td style="color: var(--color-primary); font-weight:700;">R$ ${resumo[vendedor].total.toFixed(2)}</td>
           <td style="color: var(--color-alert-warning); font-weight:700;">R$ ${resumo[vendedor].comissao.toFixed(2)}</td>
@@ -1297,6 +1389,7 @@
     // --- VENDAS & PDV ---
 
     function iniciarSessaoVenda() {
+      if (!usuarioAtual || usuarioAtual.status !== 'ativo') return alert('Faça login com um usuário ativo para iniciar as vendas.');
       vendaSessaoAtiva = true;
       document.getElementById('venda-state-closed').style.display = 'none';
       document.getElementById('venda-state-open').style.display = 'block';
@@ -1312,8 +1405,8 @@
       
       grid.innerHTML = filtrados.map(p => `
         <div class="product-card ${p.estoque <= 5 ? (p.estoque === 0 ? 'danger' : 'warning') : ''}" onclick="adicionarAoCarrinho('${p.id}')">
-          <div class="product-category">${p.categoria}</div>
-          <div class="product-name">${p.nome}</div>
+          <div class="product-category">${escapeHtml(p.categoria)}</div>
+          <div class="product-name">${escapeHtml(p.nome)}</div>
           <div class="product-price">R$ ${Number(p.preco).toFixed(2)}</div>
           <div class="product-stock">Estoque: <strong>${p.estoque} un.</strong></div>
         </div>
@@ -1391,7 +1484,7 @@
         lista.innerHTML = carrinho.map(item => `
           <div class="cart-item-row">
             <div class="cart-item-info">
-              <span class="cart-item-title">${item.nome}</span>
+              <span class="cart-item-title">${escapeHtml(item.nome)}</span>
               <span class="cart-item-sub">R$ ${item.preco.toFixed(2)} x ${item.quantidade} = R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
             </div>
             <div class="cart-item-controls">
@@ -1417,9 +1510,21 @@
     }
 
     async function confirmarVendaBD() {
-      const valorFinal = parseFloat(document.getElementById('venda-valor-final').value);
+      if (!usuarioAtual || !vendaSessaoAtiva) return alert('Abra o caixa antes de finalizar uma venda.');
+      if (!carrinho.length) return alert('O carrinho está vazio.');
+      const valorFinal = Number(document.getElementById('venda-valor-final').value);
       const pagamento = document.getElementById('venda-pagamento').value;
-      const comissaoTotal = carrinho.reduce((sum, item) => sum + (item.comissao * item.quantidade), 0);
+      const valorCalculado = carrinho.reduce((sum, item) => sum + (Number(item.preco) * Number(item.quantidade)), 0);
+      if (!Number.isFinite(valorFinal) || valorFinal <= 0 || Math.abs(valorFinal - valorCalculado) > 0.009) {
+        return alert('O valor informado precisa corresponder ao total dos itens do carrinho.');
+      }
+      for (const item of carrinho) {
+        const atual = produtos.find(p => p.id === item.produto_id);
+        if (!atual || Number(atual.estoque) < Number(item.quantidade)) {
+          return alert(`Estoque insuficiente para ${escapeHtml(item.nome)}. Atualize o catálogo antes de continuar.`);
+        }
+      }
+      const comissaoTotal = carrinho.reduce((sum, item) => sum + (Number(item.comissao) * Number(item.quantidade)), 0);
 
       const { data, error } = await db.from('vendas').insert([{
         vendedor_id: usuarioAtual ? usuarioAtual.id : 'usr-anon',
@@ -1485,8 +1590,8 @@
         return `
           <div class="venda-row">
             <div class="user-info-text">
-              <span class="user-name-title">R$ ${Number(v.total).toFixed(2)} (${v.forma_pagamento})</span>
-              <span class="user-email-sub">${dataStr} • Vendedor: ${v.vendedor_nome || 'N/A'}</span>
+              <span class="user-name-title">R$ ${Number(v.total).toFixed(2)} (${escapeHtml(v.forma_pagamento)})</span>
+              <span class="user-email-sub">${dataStr} • Vendedor: ${escapeHtml(v.vendedor_nome || 'N/A')}</span>
             </div>
             ${eAdm ? `
               <button class="btn btn-danger btn-sm" onclick="excluirVendaIndividual('${v.id}')" title="Remover esta Venda Teste">🗑️ Excluir Venda</button>
@@ -1497,6 +1602,7 @@
     }
 
     async function excluirVendaIndividual(vendaId) {
+      if (!exigirAdmin()) return;
       if (!confirm('Deseja realmente excluir esta venda? O valor será removido do relatório financeiro.')) return;
 
       const { error } = await db.from('vendas').delete().eq('id', vendaId);
@@ -1513,6 +1619,7 @@
     }
 
     async function resetarTodasVendasTotalmente() {
+      if (!exigirAdmin()) return;
       if (!confirm('🚨 ATENÇÃO ADMINISTRADOR!\n\nEsta ação irá APAGAR TODAS AS VENDAS E DESPESAS do banco de dados para você reiniciar seus testes do zero.\n\nTem certeza absoluta?')) return;
 
       const palavra = prompt('Para confirmar a exclusão TOTAL, digite "ZERAR" abaixo:');
@@ -1537,28 +1644,29 @@
     function renderizarEstoque() {
       const grid = document.getElementById('grid-estoque-produtos');
       const eAdm = usuarioAtual && usuarioAtual.cargo === 'ADM';
-
-      grid.innerHTML = produtos.map(p => `
-        <div class="product-card ${p.estoque <= 5 ? (p.estoque === 0 ? 'danger' : 'warning') : ''}">
-          ${eAdm ? `
-          <div class="product-card-actions">
-            <button class="btn-card-action" onclick="editarProduto('${p.id}')" title="Editar Produto">✏️</button>
-            <button class="btn-card-action" style="color:var(--color-alert-danger);" onclick="excluirProduto('${p.id}')" title="Excluir">🗑️</button>
-          </div>` : ''}
-          <div class="product-category">${p.categoria}</div>
-          <div class="product-name">${p.nome}</div>
-          <div class="product-price">R$ ${Number(p.preco).toFixed(2)}</div>
-          <div class="product-stock">Custo: R$ ${Number(p.custo).toFixed(2)} | Comis.: R$ ${Number(p.comissao).toFixed(2)}</div>
-          <div class="qty-controls">
-            <button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', -1)">-</button>
-            <span style="font-weight:bold; width: 30px; text-align: center;">${p.estoque}</span>
-            <button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', 1)">+</button>
-          </div>
-        </div>
-      `).join('');
+      if (!produtos.length) {
+        grid.innerHTML = '<div class="empty-state">Nenhum produto cadastrado ainda.</div>';
+        return;
+      }
+      grid.innerHTML = produtos.map(p => {
+        const acoes = eAdm
+          ? '<div class="qty-controls"><button class="btn-qty" onclick="alterarEstoqueDirect(\'' + p.id + '\', -1)" aria-label="Diminuir estoque">-</button><span style="font-weight:bold;width:30px;text-align:center">' + Number(p.estoque) + '</span><button class="btn-qty" onclick="alterarEstoqueDirect(\'' + p.id + '\', 1)" aria-label="Aumentar estoque">+</button></div>'
+          : '<div class="product-stock">Disponível: ' + Number(p.estoque) + ' un.</div>';
+        const acoesEdicao = eAdm
+          ? '<div class="product-card-actions"><button class="btn-card-action" onclick="editarProduto(\'' + p.id + '\')" title="Editar Produto">✏️</button><button class="btn-card-action" style="color:var(--color-alert-danger)" onclick="excluirProduto(\'' + p.id + '\')" title="Excluir">🗑️</button></div>'
+          : '';
+        const nivel = Number(p.estoque) <= 5 ? (Number(p.estoque) === 0 ? 'danger' : 'warning') : '';
+        return '<div class="product-card ' + nivel + '">' + acoesEdicao +
+          '<div class="product-category">' + escapeHtml(p.categoria) + '</div>' +
+          '<div class="product-name">' + escapeHtml(p.nome) + '</div>' +
+          '<div class="product-price">' + moeda(p.preco) + '</div>' +
+          '<div class="product-stock">Custo: ' + moeda(p.custo) + ' | Comis.: ' + moeda(p.comissao) + '</div>' +
+          acoes + '</div>';
+      }).join('');
     }
 
     async function alterarEstoqueDirect(id, delta) {
+      if (!exigirAdmin()) return;
       const prod = produtos.find(p => p.id === id);
       if (!prod) return;
       const novoSaldo = Math.max(0, prod.estoque + delta);
@@ -1570,6 +1678,7 @@
     }
 
     function editarProduto(id) {
+      if (!exigirAdmin()) return;
       const prod = produtos.find(p => p.id === id);
       if (!prod) return;
 
@@ -1586,6 +1695,7 @@
     }
 
     async function excluirProduto(id) {
+      if (!exigirAdmin()) return;
       if (confirm('Tem certeza que deseja excluir este produto do estoque?')) {
         await db.from('produtos').delete().eq('id', id);
         await carregarProdutos();
@@ -1596,6 +1706,7 @@
     }
 
     async function salvarProduto() {
+      if (!exigirAdmin()) return;
       const id = document.getElementById('prod-id').value;
       const nome = document.getElementById('prod-nome').value.trim();
       const categoria = document.getElementById('prod-categoria').value;
@@ -1624,7 +1735,9 @@
     async function atualizarFinanceiro() {
       const faturamento = vendas.reduce((s, v) => s + Number(v.total), 0);
       const comissoes = vendas.reduce((s, v) => s + Number(v.comissao_total), 0);
-      const cmvEstoque = faturamento * 0.45;
+      const cmvEstoque = vendas.reduce((total, venda) => total + (Array.isArray(venda.itens)
+        ? venda.itens.reduce((soma, item) => soma + Number(item.custo || 0) * Number(item.quantidade || 0), 0)
+        : 0), 0);
       const despesas = despesasExtras.filter(d => d.tipo === 'saida').reduce((s, d) => s + Number(d.valor), 0);
       const entradas = despesasExtras.filter(d => d.tipo === 'entrada').reduce((s, d) => s + Number(d.valor), 0);
 
@@ -1634,10 +1747,15 @@
       document.getElementById('stat-cmv').innerText = `R$ ${cmvEstoque.toFixed(2)}`;
       document.getElementById('stat-comissoes').innerText = `R$ ${comissoes.toFixed(2)}`;
       document.getElementById('stat-despesas').innerText = `R$ ${despesas.toFixed(2)}`;
-      document.getElementById('stat-lucro').innerText = `R$ ${lucroReal.toFixed(2)}`;
+      document.getElementById('stat-lucro').innerText = moeda(lucroReal);
+      document.getElementById('stat-faturamento').innerText = moeda(faturamento);
+      document.getElementById('stat-cmv').innerText = moeda(cmvEstoque);
+      document.getElementById('stat-comissoes').innerText = moeda(comissoes);
+      document.getElementById('stat-despesas').innerText = moeda(despesas);
     }
 
     function renderizarGrafico() {
+      if (typeof Chart === 'undefined') return;
       const tipo = document.getElementById('select-grafico-tipo').value;
       const ctx = document.getElementById('chartFinanceiro').getContext('2d');
       if (chartInstance) chartInstance.destroy();
@@ -1648,7 +1766,7 @@
 
       if (tipo === 'dia') {
         const vendasPorDia = {};
-        vendas.forEach(v => {
+        [...vendas].sort((a,b) => new Date(a.created_at) - new Date(b.created_at)).forEach(v => {
           const dia = new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
           vendasPorDia[dia] = (vendasPorDia[dia] || 0) + Number(v.total);
         });
@@ -1689,6 +1807,7 @@
     }
 
     async function salvarDespesaExtra() {
+      if (!exigirAdmin()) return;
       const tipo = document.getElementById('despesa-tipo').value;
       const descricao = document.getElementById('despesa-descricao').value.trim();
       const valor = parseFloat(document.getElementById('despesa-valor').value) || 0;
@@ -1717,8 +1836,8 @@
         divPendentes.innerHTML = pendentes.map(u => `
           <div class="user-row" style="border-left: 3px solid var(--color-alert-warning);">
             <div class="user-info-text">
-              <span class="user-name-title">${u.nome}</span>
-              <span class="user-email-sub">${u.email}</span>
+              <span class="user-name-title">${escapeHtml(u.nome)}</span>
+              <span class="user-email-sub">${escapeHtml(u.email)}</span>
             </div>
             <div style="display:flex; gap:6px;">
               <button class="btn btn-sm" onclick="aprovarUsuario('${u.id}')">Aprovar</button>
@@ -1731,11 +1850,11 @@
       divAtivos.innerHTML = ativos.map(u => `
         <div class="user-row">
           <div class="user-info-text">
-            <span class="user-name-title">${u.nome} ${u.email === EMAIL_ADMIN_ME ? '⭐ (Dono)' : ''}</span>
-            <span class="user-email-sub">${u.email} • <strong>${u.cargo}</strong></span>
+            <span class="user-name-title">${escapeHtml(u.nome)} ${u.email === EMAIL_ADMIN_ME ? '⭐ (Dono)' : ''}</span>
+            <span class="user-email-sub">${escapeHtml(u.email)} • <strong>${u.cargo}</strong></span>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button class="btn btn-secondary btn-sm" onclick="abrirModalRedefinirSenhaUsuario('${u.id}', '${u.nome}')" title="Redefinir Senha">🔑 Senha</button>
+            <button class="btn btn-secondary btn-sm" onclick="abrirModalRedefinirSenhaUsuario('${u.id}', '${escapeHtml(u.nome)}')" title="Redefinir Senha">🔑 Senha</button>
             <span class="badge-role" style="${u.status === 'bloqueado' ? 'background:rgba(229,57,53,0.2); color:#E53935;' : ''}">
               ${u.status === 'ativo' ? 'Ativo' : 'Bloqueado'}
             </span>
@@ -1750,12 +1869,14 @@
     }
 
     async function aprovarUsuario(id) {
+      if (!exigirAdmin()) return;
       await db.from('perfis_usuarios').update({ status: 'ativo' }).eq('id', id);
       await carregarUsuarios();
       renderizarEquipe();
     }
 
     async function rejeitarUsuario(id) {
+      if (!exigirAdmin()) return;
       if (confirm('Deseja rejeitar e remover esta solicitação?')) {
         await db.from('perfis_usuarios').delete().eq('id', id);
         await carregarUsuarios();
@@ -1764,6 +1885,7 @@
     }
 
     async function alternarStatusUsuario(id, statusAtual) {
+      if (!exigirAdmin()) return;
       const novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
       const { error } = await db.from('perfis_usuarios').update({ status: novoStatus }).eq('id', id);
       if (error) {
@@ -1775,6 +1897,7 @@
     }
 
     function abrirModalRedefinirSenhaUsuario(id, nome) {
+      if (!exigirAdmin()) return;
       document.getElementById('reset-user-id').value = id;
       document.getElementById('reset-user-nome').value = nome;
       document.getElementById('reset-nova-senha-adm').value = '';
@@ -1782,6 +1905,7 @@
     }
 
     async function salvarNovaSenhaUsuarioAdm() {
+      if (!exigirAdmin()) return;
       const id = document.getElementById('reset-user-id').value;
       const novaSenha = document.getElementById('reset-nova-senha-adm').value;
 
@@ -1797,6 +1921,7 @@
     }
 
     async function salvarNovoUsuario() {
+      if (!exigirAdmin()) return;
       const nome = document.getElementById('usr-nome').value.trim();
       const email = document.getElementById('usr-email').value.trim();
       const senha = document.getElementById('usr-senha').value;
@@ -1817,6 +1942,7 @@
     }
 
     function abrirModalProduto() {
+      if (!exigirAdmin()) return;
       document.getElementById('modal-produto-titulo').innerText = 'Cadastrar Produto';
       document.getElementById('prod-id').value = '';
       document.getElementById('prod-nome').value = '';
@@ -1828,10 +1954,12 @@
     }
 
     function abrirModalNovoUsuario() {
+      if (!exigirAdmin()) return;
       document.getElementById('modal-usuario').classList.add('active');
     }
 
     function abrirModalDespesaExtra() {
+      if (!exigirAdmin()) return;
       document.getElementById('modal-despesa').classList.add('active');
     }
 
