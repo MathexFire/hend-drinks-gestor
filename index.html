@@ -235,7 +235,7 @@
 <label for="prod-imagem">Foto do produto <span style="color:var(--muted);font-weight:400">(opcional)</span></label>
 <input class="form-control" id="prod-imagem" type="file" accept="image/png,image/jpeg,image/webp" onchange="previewFotoProduto(event)"/>
 <img id="prod-imagem-preview" class="photo-preview" alt="Prévia da foto do produto"/>
-<small style="color:var(--muted);font-size:9px">JPG, PNG ou WEBP · até 2 MB. A imagem será ajustada automaticamente para 1080 × 1070 px, sem esticar o produto. Você pode remover a foto quando quiser.</small>
+<small style="color:var(--muted);font-size:9px">JPG, PNG ou WEBP · arquivo original de até 50 MB. A imagem será ajustada automaticamente para 1080 × 1070 px, sem esticar o produto. Você pode remover a foto quando quiser.</small>
 <button type="button" class="btn btn-quiet btn-sm" onclick="removerFotoProduto()">Remover foto</button>
 </div>
 <div style="display: flex; gap: 8px; margin-top: 14px;">
@@ -1117,8 +1117,8 @@
       const valorFinal = Number(document.getElementById('venda-valor-final').value);
       const pagamento = document.getElementById('venda-pagamento').value;
       const valorCalculado = carrinho.reduce((sum, item) => sum + (Number(item.preco) * Number(item.quantidade)), 0);
-      if (!Number.isFinite(valorFinal) || valorFinal <= 0 || Math.abs(valorFinal - valorCalculado) > 0.009) {
-        return alert('O valor informado precisa corresponder ao total dos itens do carrinho.');
+      if (!Number.isFinite(valorFinal) || valorFinal <= 0) {
+        return alert('Informe um valor total válido, maior que zero.');
       }
       for (const item of carrinho) {
         const atual = produtos.find(p => p.id === item.produto_id);
@@ -1331,7 +1331,7 @@
       if (custo < 0 || preco <= 0 || comissao < 0 || estoque < 0) return alert('Confira os valores: custo, comissão e estoque não podem ser negativos, e o preço de venda deve ser maior que zero.');
       if (arquivoFoto) {
         if (!arquivoFoto.type.startsWith('image/')) return alert('Selecione um arquivo de imagem válido.');
-        if (arquivoFoto.size > 2 * 1024 * 1024) return alert('A foto deve ter no máximo 2 MB.');
+        if (arquivoFoto.size > 50 * 1024 * 1024) return alert('A foto deve ter no máximo 50 MB.');
         try { fotoProdutoAtual = await compactarFotoProduto(arquivoFoto); }
         catch (e) { return alert('Não foi possível processar a foto selecionada.'); }
       }
@@ -1615,7 +1615,7 @@
     function previewFotoProduto(event) {
       const file=event.target.files?.[0]; if(!file) return;
       if(!file.type.startsWith('image/')) { event.target.value=''; return alert('Selecione uma imagem válida.'); }
-      if(file.size>2*1024*1024) { event.target.value=''; return alert('A imagem deve ter no máximo 2 MB.'); }
+      if(file.size>50*1024*1024) { event.target.value=''; return alert('A imagem deve ter no máximo 50 MB.'); }
       const preview=document.getElementById('prod-imagem-preview');
       preview.src=URL.createObjectURL(file); preview.classList.add('visible');
     }
