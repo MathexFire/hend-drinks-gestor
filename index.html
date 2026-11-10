@@ -60,6 +60,27 @@
 .request-row small{display:block;color:var(--muted);font-size:9px;margin-top:4px}
 @media(max-width:640px){.cash-art-circle{width:69px;height:69px;padding:3px}.product-photo-wrap,.stock-card .product-photo-wrap{height:auto;aspect-ratio:1080 / 1070}.account-grid{grid-template-columns:1fr}.chart-wrap{min-height:250px}}
 
+
+.finance-top-highlights{display:grid;grid-template-columns:1fr 1.12fr;gap:12px;margin-bottom:14px;align-items:stretch}
+.finance-top-highlights .finance-highlight{margin:0;min-height:150px}
+.stock-goal-highlight{border-color:rgba(86,205,126,.38);background:radial-gradient(circle at 90% 10%,rgba(86,205,126,.24),transparent 34%),linear-gradient(105deg,#123b29,#102b20)}
+.stock-goal-highlight .section-kicker,.stock-goal-highlight .finance-highlight-label{color:#a8e8bd}
+.stock-goal-highlight .finance-highlight-label{margin-top:7px}
+.stock-goal-highlight>div:first-child{width:100%;gap:5px}
+.stock-goal-highlight>div:first-child>strong{color:#83e6a4;font-size:clamp(30px,3.4vw,41px)}
+.stock-goal-highlight .finance-highlight-mark{color:rgba(131,230,164,.48)}
+.stock-goal-progress{height:7px;background:rgba(255,255,255,.13);border-radius:99px;overflow:hidden;margin:8px 0 3px;max-width:470px}
+.stock-goal-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#42bd78,#a0f2b8);border-radius:inherit;transition:width .3s ease}
+.stock-goal-details{display:flex;flex-wrap:wrap;gap:7px 18px;font-size:9px;color:#c1ddca}
+.stock-goal-details strong{color:#fff;font-weight:800}
+.stock-goal-highlight small{color:#a9c9b3}
+.light-mode .stock-goal-highlight{background:linear-gradient(110deg,#e0f5e7,#f0faf2);border-color:rgba(37,150,83,.28)}
+.light-mode .stock-goal-highlight .section-kicker,.light-mode .stock-goal-highlight .finance-highlight-label,.light-mode .stock-goal-highlight small,.light-mode .stock-goal-details{color:#39744f}
+.light-mode .stock-goal-highlight>div:first-child>strong{color:#178344}
+.light-mode .stock-goal-details strong{color:#155b32}
+.light-mode .stock-goal-progress{background:rgba(37,150,83,.15)}
+@media(max-width:640px){.finance-top-highlights{grid-template-columns:1fr;gap:9px}.finance-top-highlights .finance-highlight{min-height:132px;padding:16px}.stock-goal-highlight>div:first-child>strong{font-size:30px}.stock-goal-details{font-size:8px;gap:6px 12px}}
+
 </style>
 </head>
 
@@ -119,7 +140,10 @@
 
         <section class="tab-content" id="tab-financeiro">
           <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> DESEMPENHO DO NEGÓCIO</div><h1>Financeiro<span class="heading-dot">.</span></h1><p>Faturamento, custos e comissões em uma visão unificada.</p></div><div class="page-actions"><button class="btn btn-secondary" onclick="abrirModalDespesaExtra()">＋ Custo / entrada</button><button class="btn btn-danger btn-sm" id="btn-reset-total-vendas" onclick="resetarTodasVendasTotalmente()" style="display:none">Reset total</button></div></div>
-          <div class="finance-highlight"><div><span class="section-kicker">RESULTADO ACUMULADO</span><span class="finance-highlight-label">Lucro líquido estimado</span><strong id="stat-lucro">R$ 0,00</strong><small>Vendas − CMV − comissões − despesas operacionais</small></div><div class="finance-highlight-mark">↗</div></div>
+          <div class="finance-top-highlights">
+            <div class="finance-highlight"><div><span class="section-kicker">RESULTADO ACUMULADO</span><span class="finance-highlight-label">Lucro líquido estimado</span><strong id="stat-lucro">R$ 0,00</strong><small>Vendas − CMV − comissões − despesas operacionais</small></div><div class="finance-highlight-mark">↗</div></div>
+            <div class="finance-highlight stock-goal-highlight"><div><span class="section-kicker">DESAFIO DO MÊS</span><span class="finance-highlight-label">Meta do mês · valor do estoque</span><strong id="stock-goal-target">R$ 0,00</strong><div class="stock-goal-progress"><span id="stock-goal-progress-bar"></span></div><div class="stock-goal-details"><span>Estoque atual: <strong id="stock-goal-current">R$ 0,00</strong></span><span>Falta: <strong id="stock-goal-missing">R$ 0,00</strong></span></div><small id="stock-goal-caption">Meta calculada para este mês.</small></div><div class="finance-highlight-mark">◆</div></div>
+          </div>
           <div class="stats-grid financial-stats">
             <div class="stat-card"><span class="stat-title">Faturamento total</span><strong class="stat-value" id="stat-faturamento">R$ 0,00</strong><small>vendas registradas</small></div>
             <div class="stat-card"><span class="stat-title">Custo das mercadorias (CMV)</span><strong class="stat-value red-value" id="stat-cmv">R$ 0,00</strong><small>custo dos itens vendidos</small></div>
@@ -507,6 +531,37 @@
     }
     const getEl = id => document.getElementById(id);
     const safeNumber = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+    const CHAVE_META_ESTOQUE = 'hend_stock_goal_history_v1';
+    function valorAtualEstoque() {
+      return produtos.reduce((total, produto) => total + Math.max(0, safeNumber(produto.custo)) * Math.max(0, safeNumber(produto.estoque)), 0);
+    }
+    function atualizarMetaEstoque() {
+      const atual = valorAtualEstoque();
+      const agora = new Date();
+      const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
+      let historico = {};
+      try { historico = JSON.parse(localStorage.getItem(CHAVE_META_ESTOQUE) || '{}') || {}; } catch (_) { historico = {}; }
+      let registro = historico[mesAtual];
+      if (!registro || !Number.isFinite(Number(registro.meta))) {
+        const mesAnteriorDate = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
+        const mesAnterior = `${mesAnteriorDate.getFullYear()}-${String(mesAnteriorDate.getMonth() + 1).padStart(2, '0')}`;
+        const picoAnterior = Number(historico[mesAnterior]?.pico);
+        const meta = Number.isFinite(picoAnterior) && picoAnterior > 0 ? picoAnterior + 100 : atual + 100;
+        registro = historico[mesAtual] = { meta, pico: atual };
+      }
+      registro.pico = Math.max(Math.max(0, Number(registro.pico) || 0), atual);
+      historico[mesAtual] = registro;
+      try { localStorage.setItem(CHAVE_META_ESTOQUE, JSON.stringify(historico)); } catch (_) {}
+
+      const meta = Math.max(0, Number(registro.meta) || 0);
+      const falta = Math.max(0, meta - atual);
+      const percentual = meta > 0 ? Math.min(100, (atual / meta) * 100) : 100;
+      if (getEl('stock-goal-target')) getEl('stock-goal-target').textContent = moeda(meta);
+      if (getEl('stock-goal-current')) getEl('stock-goal-current').textContent = moeda(atual);
+      if (getEl('stock-goal-missing')) getEl('stock-goal-missing').textContent = falta > 0 ? moeda(falta) : 'Meta atingida!';
+      if (getEl('stock-goal-progress-bar')) getEl('stock-goal-progress-bar').style.width = `${percentual}%`;
+      if (getEl('stock-goal-caption')) getEl('stock-goal-caption').textContent = atual >= meta ? 'Parabéns! Você alcançou a meta deste mês.' : `${percentual.toFixed(0)}% da meta alcançada · o maior estoque do mês define a próxima meta.`;
+    }
     function atualizarIndicadoresInterface() {
       const totalProdutos = produtos.length;
       const unidades = produtos.reduce((s, p) => s + safeNumber(p.estoque), 0);
@@ -1326,6 +1381,7 @@
       await carregarProdutos();
       renderizarEstoque();
       renderizarVendas();
+      atualizarFinanceiro();
       gerarDiagnosticoEstoqueIA();
     }
 
@@ -1389,12 +1445,14 @@
       await carregarProdutos();
       renderizarEstoque();
       renderizarVendas();
+      atualizarFinanceiro();
       gerarDiagnosticoEstoqueIA();
     }
 
     // --- FINANCEIRO & GRÁFICOS ---
 
     async function atualizarFinanceiro() {
+      atualizarMetaEstoque();
       const r = calcularResumoFinanceiro();
       if (getEl('stat-faturamento')) getEl('stat-faturamento').textContent = moeda(r.faturamento);
       if (getEl('stat-cmv')) getEl('stat-cmv').textContent = moeda(r.cmv);
