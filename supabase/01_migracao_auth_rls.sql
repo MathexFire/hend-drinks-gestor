@@ -439,7 +439,9 @@ revoke execute on function public.rls_auto_enable() from public, anon, authentic
 -- A inserção de vendas e a baixa de estoque acontecem na mesma transação RPC.
 -- Não conceder INSERT em vendas nem UPDATE em produtos aos clientes autenticados.
 revoke insert on public.vendas from anon, authenticated;
-revoke update on public.produtos from anon, authenticated;
+-- UPDATE em produtos continua concedido a authenticated, mas a policy
+-- produtos_update_admin impede vendedores de alterar estoque ou cadastro.
+
 
 commit;
 
