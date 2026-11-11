@@ -22,6 +22,7 @@ O aplicativo atual depende de acesso anônimo direto ao banco e não possui iden
 
 - `supabase/00_preflight_auth_rls.sql`: consulta somente leitura para repetir a auditoria.
 - `supabase/01_migracao_auth_rls.sql`: migração preparada com vínculo Auth, funções internas e políticas por perfil. Ela aborta se algum perfil ainda não estiver vinculado a uma conta Auth.
+- `supabase/functions/admin-users/index.ts`: Edge Function preparada para convites, aprovação/bloqueio, redefinição de senha e exclusão de usuários; ainda não implantada nem integrada à interface.
 - Este documento: sequência de implantação, validações e riscos.
 
 **Não execute o SQL 01 antes da atualização do frontend.** Ele é a etapa de corte da API para acesso autenticado.
@@ -62,7 +63,14 @@ O frontend precisa:
 
 A Edge Function administrativa deve validar o JWT do chamador, consultar o perfil no banco e confirmar `status = 'ativo'` e `cargo = 'ADM'` antes de usar a chave secreta do servidor. A chave secreta/service_role só pode existir nos secrets da Edge Function.
 
-### Etapa 4 — Aplicar RLS
+#### Etapa 3.1 — Preparar operações administrativas
+
+1. Configurar `SUPABASE_SERVICE_ROLE_KEY` nos secrets da Edge Function (nunca no navegador).
+2. Implantar `admin-users` somente depois de a migração criar a coluna `auth_user_id` e as funções auxiliares.
+3. Integrar os botões de equipe à função e testar convite, aprovação, bloqueio, redefinição e exclusão.
+4. Confirmar que a conta proprietária não pode ser removida e que sempre resta ao menos um ADM ativo.
+
+## Etapa 4 — Aplicar RLS
 
 Somente quando a nova versão estiver pronta e os 3 usuários estiverem no Supabase Auth:
 
