@@ -56,6 +56,7 @@ O frontend precisa:
 - carregar o perfil com colunas explícitas, sem `select('*')`;
 - remover a comparação de senhas, a sessão artesanal no `localStorage` e a promoção automática a ADM por e-mail;
 - deixar o banco validar o cargo. Ocultar abas por cargo é apenas experiência visual;
+- substituir `confirmarVendaBD()` por chamada a `db.rpc('registrar_venda', ...)`. A RPC valida o perfil autenticado, bloqueia o estoque com `FOR UPDATE`, valida quantidades e registra a venda + baixa de estoque atomicamente. O navegador não deve mais inserir em `vendas` nem atualizar `produtos.estoque` durante o checkout;
 - enviar criação de usuários, convites, bloqueio, mudança de cargo, redefinição de senha e exclusão de conta para Edge Functions autenticadas;
 - manter o UUID legado do perfil em `vendas.vendedor_id`.
 
@@ -90,7 +91,7 @@ A coluna `perfis_usuarios.senha` fica preservada durante a transição, mas o SQ
 | Solicitar exclusão da própria conta | Sim | Sim | Não |
 | Analisar solicitações | Não | Sim | Não |
 
-Operações de perfil administrativo serão executadas por Edge Functions, não por atualização direta do navegador.
+Operações de perfil administrativo serão executadas por Edge Functions, não por atualização direta do navegador. A RPC `registrar_venda` é parte obrigatória da migração para impedir venda sem baixa de estoque ou manipulação de vendedor/itens pelo cliente.
 
 ## Testes de aceite antes de liberar
 
