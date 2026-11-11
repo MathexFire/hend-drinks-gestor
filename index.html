@@ -72,12 +72,12 @@
 .stock-goal-progress{height:7px;background:rgba(255,255,255,.13);border-radius:99px;overflow:hidden;margin:8px 0 3px;max-width:470px}
 .stock-goal-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#42bd78,#a0f2b8);border-radius:inherit;transition:width .3s ease}
 .stock-goal-details{display:flex;flex-wrap:wrap;gap:7px 18px;font-size:9px;color:#c1ddca}
-.stock-goal-details strong{color:#fff;font-weight:800}
+.stock-goal-details strong{color:#fff;font-weight:800}.stock-goal-details strong.stock-goal-red{color:#ff8b86;font-weight:900}
 .stock-goal-highlight small{color:#a9c9b3}
 .light-mode .stock-goal-highlight{background:linear-gradient(110deg,#e0f5e7,#f0faf2);border-color:rgba(37,150,83,.28)}
 .light-mode .stock-goal-highlight .section-kicker,.light-mode .stock-goal-highlight .finance-highlight-label,.light-mode .stock-goal-highlight small,.light-mode .stock-goal-details{color:#39744f}
 .light-mode .stock-goal-highlight>div:first-child>strong{color:#178344}
-.light-mode .stock-goal-details strong{color:#155b32}
+.light-mode .stock-goal-details strong{color:#155b32}.light-mode .stock-goal-details strong.stock-goal-red{color:#b32626}
 .light-mode .stock-goal-progress{background:rgba(37,150,83,.15)}
 @media(max-width:640px){.finance-top-highlights{grid-template-columns:1fr;gap:9px}.finance-top-highlights .finance-highlight{min-height:132px;padding:16px}.stock-goal-highlight>div:first-child>strong{font-size:30px}.stock-goal-details{font-size:8px;gap:6px 12px}}
 
@@ -142,7 +142,7 @@
           <div class="page-heading"><div><div class="eyebrow"><span class="eyebrow-line"></span> DESEMPENHO DO NEGÓCIO</div><h1>Financeiro<span class="heading-dot">.</span></h1><p>Faturamento, custos e comissões em uma visão unificada.</p></div><div class="page-actions"><button class="btn btn-secondary" onclick="abrirModalDespesaExtra()">＋ Custo / entrada</button><button class="btn btn-danger btn-sm" id="btn-reset-total-vendas" onclick="resetarTodasVendasTotalmente()" style="display:none">Reset total</button></div></div>
           <div class="finance-top-highlights">
             <div class="finance-highlight"><div><span class="section-kicker">RESULTADO ACUMULADO</span><span class="finance-highlight-label">Lucro líquido estimado</span><strong id="stat-lucro">R$ 0,00</strong><small>Vendas − CMV − comissões − despesas operacionais</small></div><div class="finance-highlight-mark">↗</div></div>
-            <div class="finance-highlight stock-goal-highlight"><div><span class="section-kicker">DESAFIO DO MÊS</span><span class="finance-highlight-label">Meta do mês · valor do estoque</span><strong id="stock-goal-target">R$ 0,00</strong><div class="stock-goal-progress"><span id="stock-goal-progress-bar"></span></div><div class="stock-goal-details"><span>Estoque atual: <strong id="stock-goal-current">R$ 0,00</strong></span><span>Falta: <strong id="stock-goal-missing">R$ 0,00</strong></span></div><small id="stock-goal-caption">Meta calculada para este mês.</small></div><div class="finance-highlight-mark">◆</div></div>
+            <div class="finance-highlight stock-goal-highlight"><div><span class="section-kicker">DESAFIO DO MÊS</span><span class="finance-highlight-label">Meta de vendas do mês</span><strong id="stock-goal-target">R$ 0,00</strong><div class="stock-goal-progress"><span id="stock-goal-progress-bar"></span></div><div class="stock-goal-details"><span>Estoque considerado: <strong id="stock-goal-current" class="stock-goal-red">R$ 0,00</strong></span><span>Entradas no mês: <strong id="stock-goal-additions" class="stock-goal-red">R$ 0,00</strong></span><span>Vendido no mês: <strong id="stock-goal-sales">R$ 0,00</strong></span><span><span id="stock-goal-result-label">Falta para a meta</span>: <strong id="stock-goal-missing">R$ 0,00</strong></span></div><small id="stock-goal-caption">Meta calculada a partir do estoque inicial + entradas + R$ 100.</small></div><div class="finance-highlight-mark">◆</div></div>
           </div>
           <div class="stats-grid financial-stats">
             <div class="stat-card"><span class="stat-title">Faturamento total</span><strong class="stat-value" id="stat-faturamento">R$ 0,00</strong><small>vendas registradas</small></div>
@@ -531,36 +531,87 @@
     }
     const getEl = id => document.getElementById(id);
     const safeNumber = value => Number.isFinite(Number(value)) ? Number(value) : 0;
-    const CHAVE_META_ESTOQUE = 'hend_stock_goal_history_v1';
+    // Meta mensal: a base do estoque fica congelada durante o mês.
+    // Vendas não reduzem essa base; somente novas entradas somam ao investimento considerado.
+    const CHAVE_META_ESTOQUE = 'hend_stock_goal_history_v2';
     function valorAtualEstoque() {
       return produtos.reduce((total, produto) => total + Math.max(0, safeNumber(produto.custo)) * Math.max(0, safeNumber(produto.estoque)), 0);
     }
-    function atualizarMetaEstoque() {
-      const atual = valorAtualEstoque();
-      const agora = new Date();
-      const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, '0')}`;
-      let historico = {};
-      try { historico = JSON.parse(localStorage.getItem(CHAVE_META_ESTOQUE) || '{}') || {}; } catch (_) { historico = {}; }
-      let registro = historico[mesAtual];
-      if (!registro || !Number.isFinite(Number(registro.meta))) {
-        const mesAnteriorDate = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
-        const mesAnterior = `${mesAnteriorDate.getFullYear()}-${String(mesAnteriorDate.getMonth() + 1).padStart(2, '0')}`;
-        const picoAnterior = Number(historico[mesAnterior]?.pico);
-        const meta = Number.isFinite(picoAnterior) && picoAnterior > 0 ? picoAnterior + 100 : atual + 100;
-        registro = historico[mesAtual] = { meta, pico: atual };
-      }
-      registro.pico = Math.max(Math.max(0, Number(registro.pico) || 0), atual);
-      historico[mesAtual] = registro;
+    function chaveMesMeta(data = new Date()) {
+      return `${data.getFullYear()}-${String(data.getMonth() + 1).padStart(2, '0')}`;
+    }
+    function lerHistoricoMeta() {
+      try { return JSON.parse(localStorage.getItem(CHAVE_META_ESTOQUE) || '{}') || {}; }
+      catch (_) { return {}; }
+    }
+    function salvarHistoricoMeta(historico) {
       try { localStorage.setItem(CHAVE_META_ESTOQUE, JSON.stringify(historico)); } catch (_) {}
+    }
+    function obterRegistroMetaMes() {
+      const historico = lerHistoricoMeta();
+      const mesAtual = chaveMesMeta();
+      let registro = historico[mesAtual];
+      if (!registro || !Number.isFinite(Number(registro.baseEstoque))) {
+        // Ao virar o mês, carrega o investimento considerado no mês anterior.
+        // Assim, vendas e baixas de estoque não apagam o acumulado histórico.
+        const mesesAnteriores = Object.keys(historico)
+          .filter(mes => /^\d{4}-\d{2}$/.test(mes) && mes < mesAtual)
+          .sort();
+        const ultimoMes = mesesAnteriores[mesesAnteriores.length - 1];
+        const registroAnterior = ultimoMes ? historico[ultimoMes] : null;
+        const baseAnterior = Number(registroAnterior?.baseEstoque);
+        const entradasAnteriores = Number(registroAnterior?.entradasEstoque);
+        const baseAcumulada = registroAnterior && Number.isFinite(baseAnterior)
+          ? Math.max(0, baseAnterior) + (Number.isFinite(entradasAnteriores) ? Math.max(0, entradasAnteriores) : 0)
+          : valorAtualEstoque();
+        registro = { baseEstoque: baseAcumulada, entradasEstoque: 0, iniciadoEm: new Date().toISOString() };
+        historico[mesAtual] = registro;
+        salvarHistoricoMeta(historico);
+      }
+      registro.baseEstoque = Math.max(0, numeroFinanceiro(registro.baseEstoque));
+      registro.entradasEstoque = Math.max(0, numeroFinanceiro(registro.entradasEstoque));
+      return { historico, mesAtual, registro };
+    }
+    function registrarEntradaMetaEstoque(valor) {
+      const entrada = Math.max(0, numeroFinanceiro(valor));
+      if (entrada <= 0) return;
+      const { historico, mesAtual, registro } = obterRegistroMetaMes();
+      registro.entradasEstoque = Math.round((registro.entradasEstoque + entrada) * 100) / 100;
+      historico[mesAtual] = registro;
+      salvarHistoricoMeta(historico);
+      atualizarMetaEstoque();
+    }
+    function faturamentoDoMesAtual() {
+      const agora = new Date();
+      return (Array.isArray(vendas) ? vendas : []).reduce((total, venda) => {
+        if (!venda?.created_at) return total;
+        const dataVenda = new Date(venda.created_at);
+        if (Number.isNaN(dataVenda.getTime()) || chaveMesMeta(dataVenda) !== chaveMesMeta(agora)) return total;
+        return total + Math.max(0, numeroFinanceiro(venda.total));
+      }, 0);
+    }
+    function atualizarMetaEstoque() {
+      const { registro } = obterRegistroMetaMes();
+      const entradas = registro.entradasEstoque;
+      const valorConsiderado = registro.baseEstoque + entradas;
+      const meta = valorConsiderado + 100;
+      const faturamentoMes = faturamentoDoMesAtual();
+      const saldoMeta = faturamentoMes - meta;
+      const atingiu = saldoMeta >= 0;
+      const acimaMeta = saldoMeta > 0;
+      const percentual = meta > 0 ? Math.min(100, (faturamentoMes / meta) * 100) : 100;
 
-      const meta = Math.max(0, Number(registro.meta) || 0);
-      const falta = Math.max(0, meta - atual);
-      const percentual = meta > 0 ? Math.min(100, (atual / meta) * 100) : 100;
       if (getEl('stock-goal-target')) getEl('stock-goal-target').textContent = moeda(meta);
-      if (getEl('stock-goal-current')) getEl('stock-goal-current').textContent = moeda(atual);
-      if (getEl('stock-goal-missing')) getEl('stock-goal-missing').textContent = falta > 0 ? moeda(falta) : 'Meta atingida!';
+      if (getEl('stock-goal-current')) getEl('stock-goal-current').textContent = moeda(valorConsiderado);
+      if (getEl('stock-goal-additions')) getEl('stock-goal-additions').textContent = moeda(entradas);
+      if (getEl('stock-goal-sales')) getEl('stock-goal-sales').textContent = moeda(faturamentoMes);
+      if (getEl('stock-goal-result-label')) getEl('stock-goal-result-label').textContent = acimaMeta ? 'Acima da meta' : atingiu ? 'Meta atingida' : 'Falta para a meta';
+      if (getEl('stock-goal-missing')) getEl('stock-goal-missing').textContent = acimaMeta ? `+${moeda(saldoMeta)}` : atingiu ? moeda(0) : moeda(Math.abs(saldoMeta));
       if (getEl('stock-goal-progress-bar')) getEl('stock-goal-progress-bar').style.width = `${percentual}%`;
-      if (getEl('stock-goal-caption')) getEl('stock-goal-caption').textContent = atual >= meta ? 'Parabéns! Você alcançou a meta deste mês.' : `${percentual.toFixed(0)}% da meta alcançada · o maior estoque do mês define a próxima meta.`;
+      if (getEl('stock-goal-caption')) getEl('stock-goal-caption').textContent = acimaMeta
+        ? 'Meta ultrapassada! O valor positivo mostra quanto as vendas passaram do objetivo.'
+        : atingiu ? 'Meta alcançada! A partir das próximas vendas, o excedente será mostrado em positivo.'
+        : `${percentual.toFixed(0)}% alcançados pelo faturamento deste mês. As vendas não diminuem o valor considerado do estoque.`;
     }
     function atualizarIndicadoresInterface() {
       const totalProdutos = produtos.length;
@@ -957,876 +1008,3 @@
       const zerados = produtos.filter(p => safeNumber(p.estoque) <= 0);
       const criticos = produtos.filter(p => safeNumber(p.estoque) > 0 && safeNumber(p.estoque) <= 5);
       const altaMargem = [...produtos].sort((a,b) => ((Number(b.preco)-Number(b.custo)-Number(b.comissao)) - (Number(a.preco)-Number(a.custo)-Number(a.comissao))))[0];
-
-      let html = `<p><strong>Análise de Reposição & Giro de Estoque:</strong></p><ul>`;
-
-      if (zerados.length > 0) {
-        html += `<li style="color:var(--color-alert-danger);">🚨 <strong>ESTOQUE ZERADO:</strong> ${zerados.map(p => escapeHtml(p.nome)).join(', ')}. Necessário compra imediata!</li>`;
-      } else {
-        html += `<li>✅ Nenhum produto totalmente esgotado no momento.</li>`;
-      }
-
-      if (criticos.length > 0) {
-        html += `<li style="color:var(--color-alert-warning);">⚠️ <strong>NÍVEL CRÍTICO (≤5 un):</strong> ${criticos.map(p => `${escapeHtml(p.nome)} (${p.estoque} un)`).join(', ')}. Sugere-se pedido de reposição.</li>`;
-      } else {
-        html += `<li>📦 Níveis de estoque regularizados acima do limite mínimo de segurança.</li>`;
-      }
-
-      if (altaMargem) {
-        const margemLucro = (Number(altaMargem.preco) > 0 ? ((Number(altaMargem.preco) - Number(altaMargem.custo) - Number(altaMargem.comissao)) / Number(altaMargem.preco)) * 100 : 0).toFixed(0);
-        html += `<li>💡 <strong>DESTAQUE DE MARGEM:</strong> <strong>${escapeHtml(altaMargem.nome)}</strong> gera a maior margem líquida da distribuidora (<strong>${margemLucro}% de lucro</strong> por unidade). Garanta estoque no final de semana!</li>`;
-      }
-
-      html += `</ul>`;
-      target.innerHTML = html;
-    }
-
-    function gerarDiagnosticoFinanceiroIA() {
-      const target = document.getElementById('ai-financeiro-result');
-      if (!target) return;
-      const r = calcularResumoFinanceiro();
-      const vendasValidas = r.vendasValidas;
-      const pagamentosCount = {};
-      const vendedorVendas = {};
-      vendasValidas.forEach(v => {
-        const pagamento = v.forma_pagamento || 'Não informado';
-        pagamentosCount[pagamento] = (pagamentosCount[pagamento] || 0) + 1;
-        const nome = v.vendedor_nome || 'Vendedor';
-        vendedorVendas[nome] = (vendedorVendas[nome] || 0) + numeroFinanceiro(v.total);
-      });
-      const topPagamento = Object.keys(pagamentosCount).sort((a, b) => pagamentosCount[b] - pagamentosCount[a])[0] || 'Sem vendas';
-      const topVendedor = Object.keys(vendedorVendas).sort((a, b) => vendedorVendas[b] - vendedorVendas[a])[0] || 'N/A';
-      const margem = r.faturamento > 0 ? `${r.margem.toFixed(1).replace('.', ',')}%` : '0,0%';
-      const situacao = r.lucro >= 0 ? 'Resultado positivo' : 'Resultado negativo';
-
-      let html = `<p><strong>Resumo de Saúde Financeira & Destaques:</strong></p><ul>`;
-      html += `<li>📈 <strong>Resultado operacional estimado:</strong> <strong>${moeda(r.lucro)}</strong> (${situacao}).</li>`;
-      html += `<li>📊 <strong>Margem estimada:</strong> <strong>${margem}</strong> sobre o faturamento.</li>`;
-      html += `<li>🏷️ <strong>Ticket médio:</strong> <strong>${moeda(r.ticketMedio)}</strong> em ${r.quantidadeVendas} vendas válidas.</li>`;
-      html += `<li>💳 <strong>Pagamento mais usado:</strong> <strong>${escapeHtml(topPagamento)}</strong> (${pagamentosCount[topPagamento] || 0} vendas).</li>`;
-      html += `<li>🏆 <strong>Maior faturamento por vendedor:</strong> <strong>${escapeHtml(topVendedor)}</strong> (${moeda(vendedorVendas[topVendedor] || 0)}).</li>`;
-      html += `<li>🧾 <strong>Composição:</strong> faturamento − CMV − comissões − despesas extras. Aportes/entradas extras ficam separados e não são tratados como lucro de venda.</li>`;
-      if (r.vendasSemCustoCompleto > 0) html += `<li>⚠️ <strong>Atenção:</strong> ${r.vendasSemCustoCompleto} venda(s) não têm todos os custos dos itens salvos. O CMV e o lucro podem estar subestimados/incompletos.</li>`;
-      if (r.registrosInvalidos.length > 0) html += `<li>⚠️ ${r.registrosInvalidos.length} registro(s) com valor vazio, inválido ou não positivo foram ignorados para evitar distorções.</li>`;
-      if (r.quantidadeVendas === 0 && r.despesas > 0) html += `<li>ℹ️ Ainda não há vendas válidas; as despesas lançadas aparecem como custo e podem gerar resultado negativo.</li>`;
-      html += `</ul>`;
-      target.innerHTML = html;
-    }
-
-    // --- RELATÓRIO DE VENDEDORES & COMISSÕES ---
-
-    function renderizarRelatorioVendedores() {
-      const tbody = document.getElementById('tabela-vendedores-comissoes');
-      if (!tbody) return;
-      const vendasValidas = calcularResumoFinanceiro().vendasValidas;
-      if (!vendasValidas.length) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--color-text-muted);">Nenhuma venda válida registrada ainda.</td></tr>';
-        return;
-      }
-      const resumo = {};
-      vendasValidas.forEach(v => {
-        const nome = v.vendedor_nome || 'Não Identificado';
-        if (!resumo[nome]) resumo[nome] = { qtd: 0, totalCentavos: 0, comissaoCentavos: 0 };
-        resumo[nome].qtd += 1;
-        resumo[nome].totalCentavos += centavos(v.total);
-        if (v.comissao_total !== null && v.comissao_total !== undefined && v.comissao_total !== '') {
-          resumo[nome].comissaoCentavos += Math.max(0, centavos(v.comissao_total));
-        } else {
-          resumo[nome].comissaoCentavos += itensDaVenda(v).reduce((soma, item) => soma + Math.max(0, centavos(numeroFinanceiro(item.comissao) * numeroFinanceiro(item.quantidade))), 0);
-        }
-      });
-      tbody.innerHTML = Object.keys(resumo).sort((a,b) => resumo[b].totalCentavos - resumo[a].totalCentavos).map(vendedor => `
-        <tr>
-          <td><strong>${escapeHtml(vendedor)}</strong></td>
-          <td>${resumo[vendedor].qtd} vendas</td>
-          <td style="color:var(--color-primary);font-weight:700;">${moeda(resumo[vendedor].totalCentavos / 100)}</td>
-          <td style="color:var(--color-alert-warning);font-weight:700;">${moeda(resumo[vendedor].comissaoCentavos / 100)}</td>
-        </tr>
-      `).join('');
-    }
-
-    // --- VENDAS & PDV ---
-
-    function iniciarSessaoVenda() {
-      if (!usuarioAtual || usuarioAtual.status !== 'ativo') return alert('Faça login com um usuário ativo para iniciar as vendas.');
-      vendaSessaoAtiva = true;
-      document.getElementById('venda-state-closed').style.display = 'none';
-      document.getElementById('venda-state-open').style.display = 'block';
-      document.getElementById('pdv-bar').style.display = 'flex';
-      renderizarVendas();
-    }
-
-    function renderizarVendas() {
-      const grid = document.getElementById('grid-vendas-produtos');
-      if (!vendaSessaoAtiva) return;
-
-      const termo = (getEl('busca-produtos-pdv')?.value || '').trim().toLocaleLowerCase('pt-BR');
-      const filtrados = produtos.filter(p =>
-        (categoriaFiltroVendas === 'Todos' || p.categoria === categoriaFiltroVendas) &&
-        (!termo || String(p.nome || '').toLocaleLowerCase('pt-BR').includes(termo))
-      );
-      grid.innerHTML = filtrados.length ? filtrados.map(p => `
-        <button type="button" class="product-card ${safeNumber(p.estoque) <= 5 ? (safeNumber(p.estoque) <= 0 ? 'danger' : 'warning') : ''}" onclick="adicionarAoCarrinho('${p.id}')" ${safeNumber(p.estoque) <= 0 ? 'disabled' : ''}>
-          ${p.imagem_url ? `<span class="product-photo-wrap"><img class="product-photo" src="${escapeHtml(p.imagem_url)}" alt="${escapeHtml(p.nome)}" loading="lazy"></span>` : `<span class="product-photo-wrap"><span class="product-photo-placeholder">${p.categoria === 'Energéticos' ? 'ϟ' : p.categoria === 'Refrigerantes' ? '◉' : p.categoria === 'Sucos' ? '◍' : '✦'}</span></span>`}
-          <span class="product-card-top"><span class="product-category">${escapeHtml(p.categoria || 'Outros')}</span><span class="product-add">+</span></span>
-          <span class="product-name">${escapeHtml(p.nome)}</span>
-          <span class="product-price">${moeda(p.preco)}</span>
-          <span class="product-stock">${safeNumber(p.estoque) > 0 ? `Disponível · ${safeNumber(p.estoque)} un.` : 'Sem estoque'}</span>
-        </button>
-      `).join('') : '<div class="empty-state empty-state-wide"><span class="empty-icon">⌕</span><strong>Nenhum produto encontrado</strong><span>Altere a busca ou selecione outra categoria.</span></div>';
-    }
-
-    function filtrarVendasCategoria(cat, el) {
-      categoriaFiltroVendas = cat;
-      document.querySelectorAll('#vendas-categorias .pill').forEach(p => p.classList.remove('active'));
-      if (el) el.classList.add('active');
-      renderizarVendas();
-    }
-
-    function adicionarAoCarrinho(id) {
-      const prod = produtos.find(p => p.id === id);
-      if (!prod || prod.estoque <= 0) return alert('Produto indisponível ou sem estoque!');
-
-      const itemExistente = carrinho.find(c => c.produto_id === id);
-      if (itemExistente) {
-        if (itemExistente.quantidade >= prod.estoque) {
-          return alert('Quantidade máxima disponível em estoque atingida.');
-        }
-        itemExistente.quantidade++;
-      } else {
-        carrinho.push({
-          produto_id: prod.id,
-          nome: prod.nome,
-          preco: Number(prod.preco),
-          custo: Number(prod.custo),
-          comissao: Number(prod.comissao),
-          quantidade: 1
-        });
-      }
-      atualizarCarrinhoBar();
-    }
-
-    function alterarQtdCarrinho(id, delta) {
-      const idx = carrinho.findIndex(c => c.produto_id === id);
-      if (idx === -1) return;
-
-      const item = carrinho[idx];
-      const prod = produtos.find(p => p.id === id);
-
-      if (delta > 0 && item.quantidade >= prod.estoque) {
-        return alert('Limite de estoque atingido.');
-      }
-
-      item.quantidade += delta;
-      if (item.quantidade <= 0) {
-        carrinho.splice(idx, 1);
-      }
-      atualizarCarrinhoBar();
-      verCarrinhoDetalhes();
-    }
-
-    function removerItemCarrinho(id) {
-      carrinho = carrinho.filter(c => c.produto_id !== id);
-      atualizarCarrinhoBar();
-      verCarrinhoDetalhes();
-    }
-
-    function atualizarCarrinhoBar() {
-      const totalItens = carrinho.reduce((s, i) => s + i.quantidade, 0);
-      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
-
-      document.getElementById('cart-count').innerText = totalItens;
-      document.getElementById('cart-total').innerText = `R$ ${valorTotal.toFixed(2)}`;
-    }
-
-    function verCarrinhoDetalhes() {
-      const lista = document.getElementById('carrinho-itens-lista');
-      if (carrinho.length === 0) {
-        lista.innerHTML = '<p style="color: var(--color-text-muted); text-align: center; padding: 20px;">Nenhum produto no carrinho.</p>';
-      } else {
-        lista.innerHTML = carrinho.map(item => `
-          <div class="cart-item-row">
-            <div class="cart-item-info">
-              <span class="cart-item-title">${escapeHtml(item.nome)}</span>
-              <span class="cart-item-sub">R$ ${item.preco.toFixed(2)} x ${item.quantidade} = R$ ${(item.preco * item.quantidade).toFixed(2)}</span>
-            </div>
-            <div class="cart-item-controls">
-              <button class="btn-qty" onclick="alterarQtdCarrinho('${item.produto_id}', -1)">-</button>
-              <span style="font-weight: bold; width: 20px; text-align: center;">${item.quantidade}</span>
-              <button class="btn-qty" onclick="alterarQtdCarrinho('${item.produto_id}', 1)">+</button>
-              <button class="btn-qty" style="color: var(--color-alert-danger);" onclick="removerItemCarrinho('${item.produto_id}')">🗑️</button>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
-      document.getElementById('carrinho-modal-total').innerText = `R$ ${valorTotal.toFixed(2)}`;
-      document.getElementById('modal-carrinho').classList.add('active');
-    }
-
-    function abrirModalFinalizarVenda() {
-      if (carrinho.length === 0) return alert('Adicione pelo menos um produto ao carrinho.');
-      const valorTotal = carrinho.reduce((s, i) => s + (i.preco * i.quantidade), 0);
-      document.getElementById('venda-valor-final').value = valorTotal.toFixed(2);
-      document.getElementById('modal-venda').classList.add('active');
-    }
-
-    async function confirmarVendaBD() {
-      if (!usuarioAtual || !vendaSessaoAtiva) return alert('Abra o caixa antes de finalizar uma venda.');
-      if (!carrinho.length) return alert('O carrinho está vazio.');
-      const valorFinal = Number(document.getElementById('venda-valor-final').value);
-      const pagamento = document.getElementById('venda-pagamento').value;
-      const valorCalculado = carrinho.reduce((sum, item) => sum + (Number(item.preco) * Number(item.quantidade)), 0);
-      if (!Number.isFinite(valorFinal) || valorFinal <= 0) {
-        return alert('Informe um valor total válido, maior que zero.');
-      }
-      for (const item of carrinho) {
-        const atual = produtos.find(p => p.id === item.produto_id);
-        if (!atual || Number(atual.estoque) < Number(item.quantidade)) {
-          return alert(`Estoque insuficiente para ${escapeHtml(item.nome)}. Atualize o catálogo antes de continuar.`);
-        }
-      }
-      const comissaoTotal = carrinho.reduce((sum, item) => sum + (Number(item.comissao) * Number(item.quantidade)), 0);
-
-      const { data, error } = await db.from('vendas').insert([{
-        vendedor_id: usuarioAtual ? usuarioAtual.id : 'usr-anon',
-        vendedor_nome: usuarioAtual ? usuarioAtual.nome : 'Vendedor',
-        total: valorFinal,
-        comissao_total: comissaoTotal,
-        forma_pagamento: pagamento,
-        itens: carrinho
-      }]);
-
-      if (error) {
-        return alert('Erro ao salvar venda no banco de dados. Tente novamente.');
-      }
-
-      for (let item of carrinho) {
-        const prod = produtos.find(p => p.id === item.produto_id);
-        if (prod) {
-          const novoEstoque = Math.max(0, prod.estoque - item.quantidade);
-          await db.from('produtos').update({ estoque: novoEstoque }).eq('id', prod.id);
-        }
-      }
-
-      alert('Venda gravada com sucesso!');
-      carrinho = [];
-      atualizarCarrinhoBar();
-      fecharModais();
-      await carregarProdutos();
-      await carregarVendas();
-      renderizarVendas();
-      renderizarEstoque();
-      atualizarFinanceiro();
-      renderizarHistoricoVendas();
-      renderizarRelatorioVendedores();
-      gerarDiagnosticoEstoqueIA();
-      gerarDiagnosticoFinanceiroIA();
-    }
-
-    function fecharCaixaDoDia() {
-      if (confirm('Deseja realmente fechar o caixa do dia?')) {
-        vendaSessaoAtiva = false;
-        carrinho = [];
-        atualizarCarrinhoBar();
-        document.getElementById('venda-state-closed').style.display = 'block';
-        document.getElementById('venda-state-open').style.display = 'none';
-        document.getElementById('pdv-bar').style.display = 'none';
-        alert('Caixa do dia fechado com sucesso.');
-      }
-    }
-
-    // --- REMOÇÃO E RESET DE VENDAS (SÓ ADM) ---
-
-    function renderizarHistoricoVendas() {
-      const div = document.getElementById('lista-historico-vendas');
-      if (!vendas || vendas.length === 0) {
-        div.innerHTML = '<p style="font-size: 0.8rem; color: var(--color-text-muted);">Nenhuma venda registrada até o momento.</p>';
-        return;
-      }
-
-      const eAdm = usuarioAtual && usuarioAtual.cargo === 'ADM';
-      div.innerHTML = vendas.slice(0, 20).map(v => {
-        const dataStr = v.created_at ? new Date(v.created_at).toLocaleString('pt-BR') : 'Data não informada';
-        const quantidadeItens = itensDaVenda(v).reduce((soma, item) => soma + Math.max(0, numeroFinanceiro(item.quantidade)), 0);
-        return `
-          <div class="venda-row" role="button" tabindex="0" aria-label="Ver detalhes da venda de ${moeda(v.total)}" onclick="abrirDetalheVenda('${escapeHtml(v.id)}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();abrirDetalheVenda('${escapeHtml(v.id)}')}">
-            <div class="venda-row-main">
-              <div class="user-info-text">
-                <span class="user-name-title">${moeda(v.total)} (${escapeHtml(v.forma_pagamento || 'Não informado')})</span>
-                <span class="user-email-sub">${escapeHtml(dataStr)} • Vendedor: ${escapeHtml(v.vendedor_nome || 'N/A')} • ${quantidadeItens} item(ns)</span>
-              </div>
-              <span class="venda-row-hint">VER ITENS ›</span>
-            </div>
-            ${eAdm ? `
-              <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();excluirVendaIndividual('${escapeHtml(v.id)}')" title="Remover esta Venda Teste">🗑️ Excluir</button>
-            ` : ''}
-          </div>
-        `;
-      }).join('');
-    }
-
-    function abrirDetalheVenda(vendaId) {
-      const venda = vendas.find(v => String(v.id) === String(vendaId));
-      if (!venda) return alert('Não foi possível localizar essa venda. Atualize o histórico e tente novamente.');
-      const itens = itensDaVenda(venda);
-      const somaItens = itens.reduce((soma, item) => soma + numeroFinanceiro(item.preco) * numeroFinanceiro(item.quantidade), 0);
-      const totalVenda = numeroFinanceiro(venda.total);
-      const diferenca = totalVenda - somaItens;
-      const dataStr = venda.created_at ? new Date(venda.created_at).toLocaleString('pt-BR') : 'Data não informada';
-      const lista = itens.length ? itens.map(item => {
-        const nome = item.nome || item.produto_nome || 'Produto sem nome salvo';
-        const qtd = numeroFinanceiro(item.quantidade);
-        const unitario = numeroFinanceiro(item.preco);
-        const subtotal = unitario * qtd;
-        return `<div class="sale-detail-item"><div><strong>${escapeHtml(nome)}</strong><small>${qtd} × ${moeda(unitario)} por unidade</small></div><div class="sale-detail-price">${moeda(subtotal)}</div></div>`;
-      }).join('') : '<p style="padding:15px 0;color:var(--muted);font-size:11px">Esta venda não possui os itens detalhados salvos no banco de dados. O sistema só consegue mostrar os dados que foram registrados na época da venda.</p>';
-      const ajuste = Math.abs(diferenca) >= 0.01 ? `<div><span>${diferenca < 0 ? 'Desconto/ajuste' : 'Acréscimo/ajuste'}</span><strong>${moeda(diferenca)}</strong></div>` : '';
-      document.getElementById('detalhe-venda-conteudo').innerHTML = `
-        <div class="sale-detail-meta">
-          <div><small>DATA E HORA</small><strong>${escapeHtml(dataStr)}</strong></div>
-          <div><small>FORMA DE PAGAMENTO</small><strong>${escapeHtml(venda.forma_pagamento || 'Não informada')}</strong></div>
-          <div><small>VENDEDOR</small><strong>${escapeHtml(venda.vendedor_nome || 'Não informado')}</strong></div>
-          <div><small>QUANTIDADE DE ITENS</small><strong>${itens.reduce((s,i)=>s+Math.max(0,numeroFinanceiro(i.quantidade)),0)}</strong></div>
-        </div>
-        <div class="section-kicker" style="margin-top:15px">PRODUTOS REGISTRADOS</div>
-        <div class="sale-detail-list">${lista}</div>
-        <div class="sale-detail-summary">
-          <div><span>Subtotal dos produtos</span><strong>${moeda(somaItens)}</strong></div>
-          ${ajuste}
-          <div class="sale-detail-grand"><span>TOTAL DA VENDA</span><strong>${moeda(totalVenda)}</strong></div>
-        </div>
-        <p style="font-size:9px;color:var(--muted);line-height:1.5;margin:12px 2px 0">O detalhamento reflete os itens salvos no momento do lançamento. Vendas antigas sem itens registrados não podem ser reconstruídas automaticamente.</p>
-      `;
-      document.getElementById('modal-detalhe-venda').classList.add('active');
-    }
-
-    async function excluirVendaIndividual(vendaId) {
-      if (!exigirAdmin()) return;
-      if (!confirm('Deseja realmente excluir esta venda? O valor será removido do relatório financeiro.')) return;
-
-      const { error } = await db.from('vendas').delete().eq('id', vendaId);
-      if (error) {
-        return alert('Erro ao excluir venda.');
-      }
-
-      alert('Venda removida com sucesso!');
-      await carregarVendas();
-      atualizarFinanceiro();
-      renderizarHistoricoVendas();
-      renderizarRelatorioVendedores();
-      gerarDiagnosticoFinanceiroIA();
-    }
-
-    async function resetarTodasVendasTotalmente() {
-      if (!exigirAdmin()) return;
-      if (!confirm('🚨 ATENÇÃO ADMINISTRADOR!\n\nEsta ação irá APAGAR TODAS AS VENDAS E DESPESAS do banco de dados para você reiniciar seus testes do zero.\n\nTem certeza absoluta?')) return;
-
-      const palavra = prompt('Para confirmar a exclusão TOTAL, digite "ZERAR" abaixo:');
-      if (palavra !== 'ZERAR') {
-        return alert('Ação cancelada. Palavra de confirmação incorreta.');
-      }
-
-      await db.from('vendas').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await db.from('despesas_extras').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-
-      alert('🧹 Reset Concluído! Todas as vendas e registros de testes foram zerados.');
-      await carregarVendas();
-      await carregarDespesasExtras();
-      atualizarFinanceiro();
-      renderizarHistoricoVendas();
-      renderizarRelatorioVendedores();
-      gerarDiagnosticoFinanceiroIA();
-    }
-
-    // --- ESTOQUE ---
-
-    function renderizarEstoque() {
-      const grid = document.getElementById('grid-estoque-produtos');
-      const eAdm = usuarioAtual && usuarioAtual.cargo === 'ADM';
-      const termo = (getEl('busca-estoque')?.value || '').trim().toLocaleLowerCase('pt-BR');
-      const filtrados = produtos.filter(p => !termo || String(p.nome || '').toLocaleLowerCase('pt-BR').includes(termo) || String(p.categoria || '').toLocaleLowerCase('pt-BR').includes(termo));
-      atualizarIndicadoresInterface();
-      if (!filtrados.length) {
-        grid.innerHTML = '<div class="empty-state empty-state-wide"><span class="empty-icon">▤</span><strong>Nenhum produto encontrado</strong><span>Cadastre um item ou ajuste os filtros.</span></div>';
-        return;
-      }
-      grid.innerHTML = filtrados.map(p => {
-        const saldo = safeNumber(p.estoque);
-        const nivel = saldo <= 0 ? 'danger' : saldo <= 5 ? 'warning' : 'normal';
-        const acoes = eAdm
-          ? `<div class="stock-adjust"><button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', -1)" aria-label="Diminuir estoque">−</button><span>${saldo} <small>un.</small></span><button class="btn-qty" onclick="alterarEstoqueDirect('${p.id}', 1)" aria-label="Aumentar estoque">+</button></div>`
-          : `<div class="product-stock">Saldo disponível: <strong>${saldo} un.</strong></div>`;
-        const acoesEdicao = eAdm
-          ? `<div class="product-card-actions"><button class="btn-card-action" onclick="editarProduto('${p.id}')" title="Editar produto" aria-label="Editar ${escapeHtml(p.nome)}">✎</button><button class="btn-card-action danger-action" onclick="excluirProduto('${p.id}')" title="Excluir produto" aria-label="Excluir ${escapeHtml(p.nome)}">×</button></div>`
-          : '';
-        return `<article class="stock-card ${nivel}">
-          ${p.imagem_url ? `<div class="product-photo-wrap"><img class="product-photo" src="${escapeHtml(p.imagem_url)}" alt="${escapeHtml(p.nome)}" loading="lazy"></div>` : `<div class="product-photo-wrap"><span class="product-photo-placeholder">${p.categoria === 'Energéticos' ? 'ϟ' : p.categoria === 'Refrigerantes' ? '◉' : p.categoria === 'Sucos' ? '◍' : '✦'}</span></div>`}
-          <div class="stock-card-head"><span class="stock-icon">${p.categoria === 'Energéticos' ? 'ϟ' : p.categoria === 'Refrigerantes' ? '◉' : p.categoria === 'Sucos' ? '◍' : '✦'}</span><span class="stock-status status-${nivel}">${saldo <= 0 ? 'Esgotado' : saldo <= 5 ? 'Estoque crítico' : 'Em estoque'}</span>${acoesEdicao}</div>
-          <div class="product-category">${escapeHtml(p.categoria || 'Outros')}</div><div class="product-name">${escapeHtml(p.nome)}</div>
-          <div class="stock-card-price">${moeda(p.preco)} <small>preço de venda</small></div>
-          <div class="stock-meta"><span>Custo <strong>${moeda(p.custo)}</strong></span><span>Comissão <strong>${moeda(p.comissao)}</strong></span></div>
-          <div class="stock-level"><div class="stock-level-label"><span>Disponibilidade</span><strong>${saldo} un.</strong></div><div class="stock-track"><span style="width:${Math.min(100,Math.max(0,saldo/30*100))}%"></span></div></div>${acoes}
-        </article>`;
-      }).join('');
-    }
-
-    async function alterarEstoqueDirect(id, delta) {
-      if (!exigirAdmin()) return;
-      const prod = produtos.find(p => p.id === id);
-      if (!prod) return;
-      const novoSaldo = Math.max(0, safeNumber(prod.estoque) + delta);
-      await db.from('produtos').update({ estoque: novoSaldo }).eq('id', id);
-      await carregarProdutos();
-      renderizarEstoque();
-      renderizarVendas();
-      atualizarFinanceiro();
-      gerarDiagnosticoEstoqueIA();
-    }
-
-    function editarProduto(id) {
-      if (!exigirAdmin()) return;
-      const prod = produtos.find(p => p.id === id);
-      if (!prod) return;
-
-      document.getElementById('modal-produto-titulo').innerText = 'Editar Produto';
-      document.getElementById('prod-id').value = prod.id;
-      document.getElementById('prod-nome').value = prod.nome;
-      document.getElementById('prod-categoria').value = prod.categoria;
-      document.getElementById('prod-custo').value = prod.custo;
-      document.getElementById('prod-preco').value = prod.preco;
-      document.getElementById('prod-comissao').value = prod.comissao;
-      document.getElementById('prod-qtd').value = prod.estoque;
-      fotoProdutoAtual = prod.imagem_url || null;
-      document.getElementById('prod-imagem').value = '';
-      const preview = document.getElementById('prod-imagem-preview'); preview.src = fotoProdutoAtual || ''; preview.classList.toggle('visible', !!fotoProdutoAtual);
-
-      document.getElementById('modal-produto').classList.add('active');
-    }
-
-    async function excluirProduto(id) {
-      if (!exigirAdmin()) return;
-      if (confirm('Tem certeza que deseja excluir este produto do estoque?')) {
-        await db.from('produtos').delete().eq('id', id);
-        await carregarProdutos();
-        renderizarEstoque();
-        renderizarVendas();
-        gerarDiagnosticoEstoqueIA();
-      }
-    }
-
-    async function salvarProduto() {
-      if (!exigirAdmin()) return;
-      const id = document.getElementById('prod-id').value;
-      const nome = document.getElementById('prod-nome').value.trim();
-      const categoria = document.getElementById('prod-categoria').value;
-      const custo = parseFloat(document.getElementById('prod-custo').value) || 0;
-      const preco = parseFloat(document.getElementById('prod-preco').value) || 0;
-      const comissao = parseFloat(document.getElementById('prod-comissao').value) || 0;
-      const estoque = parseInt(document.getElementById('prod-qtd').value) || 0;
-      const arquivoFoto = document.getElementById('prod-imagem').files?.[0];
-
-      if (!nome) return alert('Por favor, informe o nome do produto.');
-      if (custo < 0 || preco <= 0 || comissao < 0 || estoque < 0) return alert('Confira os valores: custo, comissão e estoque não podem ser negativos, e o preço de venda deve ser maior que zero.');
-      if (arquivoFoto) {
-        if (!arquivoFoto.type.startsWith('image/')) return alert('Selecione um arquivo de imagem válido.');
-        if (arquivoFoto.size > 50 * 1024 * 1024) return alert('A foto deve ter no máximo 50 MB.');
-        try { fotoProdutoAtual = await compactarFotoProduto(arquivoFoto); }
-        catch (e) { return alert('Não foi possível processar a foto selecionada.'); }
-      }
-      const payload = { nome, categoria, custo, preco, comissao, estoque, imagem_url: fotoProdutoAtual || null };
-      let result;
-      if (id) result = await db.from('produtos').update(payload).eq('id', id);
-      else result = await db.from('produtos').insert([payload]);
-      if (result?.error) return alert('Erro ao salvar produto: ' + result.error.message);
-
-      fecharModais();
-      await carregarProdutos();
-      renderizarEstoque();
-      renderizarVendas();
-      atualizarFinanceiro();
-      gerarDiagnosticoEstoqueIA();
-    }
-
-    // --- FINANCEIRO & GRÁFICOS ---
-
-    async function atualizarFinanceiro() {
-      atualizarMetaEstoque();
-      const r = calcularResumoFinanceiro();
-      if (getEl('stat-faturamento')) getEl('stat-faturamento').textContent = moeda(r.faturamento);
-      if (getEl('stat-cmv')) getEl('stat-cmv').textContent = moeda(r.cmv);
-      if (getEl('stat-comissoes')) getEl('stat-comissoes').textContent = moeda(r.comissoes);
-      if (getEl('stat-despesas')) getEl('stat-despesas').textContent = moeda(r.despesas);
-      if (getEl('stat-entradas')) getEl('stat-entradas').textContent = moeda(r.entradas);
-      if (getEl('stat-lucro')) {
-        getEl('stat-lucro').textContent = moeda(r.lucro);
-        getEl('stat-lucro').classList.toggle('red-value', r.lucro < 0);
-        getEl('stat-lucro').classList.toggle('green-value', r.lucro >= 0);
-      }
-      if (getEl('overview-revenue')) getEl('overview-revenue').textContent = moeda(r.faturamento);
-      if (getEl('overview-sales')) getEl('overview-sales').textContent = r.quantidadeVendas;
-      if (getEl('overview-sales-count')) getEl('overview-sales-count').textContent = r.quantidadeVendas;
-      if (getEl('overview-profit')) getEl('overview-profit').textContent = moeda(r.lucro);
-
-      const warning = getEl('finance-data-warning');
-      if (warning) {
-        const mensagens = [];
-        if (r.vendasSemCustoCompleto > 0) mensagens.push(`<strong>Histórico incompleto:</strong> ${r.vendasSemCustoCompleto} venda(s) não possuem custo salvo em todos os itens. O CMV contabiliza apenas os custos disponíveis, então o lucro exibido pode estar maior que o real. Revise os custos dessas vendas antigas.`);
-        if (r.registrosInvalidos.length > 0) mensagens.push(`<strong>Registros ignorados:</strong> ${r.registrosInvalidos.length} lançamento(s) inválido(s) ou venda(s) com total não positivo não entraram no cálculo.`);
-        if (r.lucro < 0 && r.faturamento > 0) mensagens.push(`<strong>Resultado negativo:</strong> as despesas, o CMV e as comissões registrados superam o faturamento. O sistema mantém o valor negativo porque não deve esconder um prejuízo real.`);
-        if (r.quantidadeVendas === 0 && r.despesas > 0) mensagens.push(`<strong>Sem vendas registradas:</strong> existem despesas de ${moeda(r.despesas)} sem faturamento no período acumulado.`);
-        warning.innerHTML = mensagens.join('<br>');
-        warning.style.display = mensagens.length ? 'block' : 'none';
-      }
-    }
-
-    function renderizarGrafico() {
-      if (typeof Chart === 'undefined') return;
-      const select = getEl('select-grafico-tipo');
-      const canvas = getEl('chartFinanceiro');
-      if (!select || !canvas) return;
-      const vendasValidas = calcularResumoFinanceiro().vendasValidas;
-      const tipo = select.value;
-      const ctx = canvas.getContext('2d');
-      if (chartInstance) chartInstance.destroy();
-      let labels = [], dataValues = [], chartType = 'line';
-      const agora = new Date();
-      const chaveDataLocal = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-      if (tipo === 'dia') {
-        const dias = [];
-        for (let i = 13; i >= 0; i--) { const d = new Date(agora); d.setHours(12,0,0,0); d.setDate(d.getDate()-i); dias.push(d); }
-        labels = dias.map(d => d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' }));
-        const totais = Object.fromEntries(dias.map(d => [chaveDataLocal(d), 0]));
-        vendasValidas.forEach(v => {
-          const d = new Date(v.created_at);
-          if (!Number.isNaN(d.getTime())) {
-            const key = chaveDataLocal(d);
-            if (Object.prototype.hasOwnProperty.call(totais, key)) totais[key] += centavos(v.total) / 100;
-          }
-        });
-        dataValues = dias.map(d => totais[chaveDataLocal(d)]);
-      } else if (tipo === 'mes') {
-        chartType = 'bar';
-        labels = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-        const centavosPorMes = new Array(12).fill(0);
-        vendasValidas.forEach(v => {
-          const d = new Date(v.created_at);
-          if (!Number.isNaN(d.getTime()) && d.getFullYear() === agora.getFullYear()) centavosPorMes[d.getMonth()] += centavos(v.total);
-        });
-        dataValues = centavosPorMes.map(v => v / 100);
-      } else {
-        chartType = 'doughnut';
-        const fp = { 'Pix':0, 'Dinheiro':0, 'Débito':0, 'Crédito':0, 'Outros':0 };
-        vendasValidas.forEach(v => {
-          const forma = v.forma_pagamento || 'Outros';
-          fp[Object.prototype.hasOwnProperty.call(fp, forma) ? forma : 'Outros'] += numeroFinanceiro(v.total);
-        });
-        labels = Object.keys(fp);
-        dataValues = Object.values(fp);
-      }
-      const gradient = ctx.createLinearGradient(0,0,0,320);
-      gradient.addColorStop(0,'rgba(185,243,108,.38)');
-      gradient.addColorStop(1,'rgba(185,243,108,.015)');
-      const isDonut = chartType === 'doughnut';
-      chartInstance = new Chart(ctx, {
-        type: chartType,
-        data: { labels, datasets: [{ label:'Faturamento', data:dataValues,
-          backgroundColor:isDonut?['#B9F36C','#77B94B','#E8B45D','#7196D1','#9B8BC7']:chartType==='bar'?'rgba(185,243,108,.78)':gradient,
-          borderColor:isDonut?['#B9F36C','#77B94B','#E8B45D','#7196D1','#9B8BC7']:'#B9F36C',
-          borderWidth:isDonut?0:2, borderRadius:chartType==='bar'?8:0, borderSkipped:false,
-          fill:chartType==='line', tension:.38, pointRadius:chartType==='line'?3:0, pointHoverRadius:6,
-          pointBackgroundColor:'#D9F7B2', pointBorderColor:'#1b291b', pointBorderWidth:2, hoverOffset:8 }] },
-        options: { responsive:true, maintainAspectRatio:false, interaction:{intersect:false,mode:'index'},
-          plugins: { legend:{display:isDonut,position:'bottom',labels:{usePointStyle:true,pointStyle:'circle',padding:20,color:getComputedStyle(document.body).color,font:{family:'Inter, sans-serif',size:11}}},
-            tooltip:{backgroundColor:'#111b14',titleColor:'#dff5c6',bodyColor:'#f4f7ef',padding:13,cornerRadius:10,displayColors:true,
-              callbacks:{label:c=>` ${c.label || 'Faturamento'}: ${numeroFinanceiro(c.parsed?.y ?? c.parsed).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}`}} },
-          scales:isDonut?{}:{x:{grid:{display:false},ticks:{color:'#879488',font:{size:10}},border:{display:false}},y:{beginAtZero:true,grid:{color:'rgba(130,150,130,.12)',drawTicks:false},ticks:{color:'#879488',padding:10,font:{size:10},callback:v=>Number(v).toLocaleString('pt-BR',{notation:'compact',maximumFractionDigits:1})},border:{display:false}}},
-          elements:{line:{capBezierPoints:true}}
-        }
-      });
-    }
-
-    async function salvarDespesaExtra() {
-      if (!exigirAdmin()) return;
-      const tipo = getEl('despesa-tipo').value;
-      const descricao = getEl('despesa-descricao').value.trim();
-      const valor = numeroFinanceiro(getEl('despesa-valor').value);
-      if (!descricao || !Number.isFinite(valor) || valor <= 0) return alert('Preencha a descrição e informe um valor maior que zero.');
-      const { error } = await db.from('despesas_extras').insert([{ tipo, descricao, valor: Math.abs(valor) }]);
-      if (error) return alert('Não foi possível salvar o lançamento: ' + error.message);
-      fecharModais();
-      getEl('despesa-descricao').value = '';
-      getEl('despesa-valor').value = '';
-      await carregarDespesasExtras();
-      await atualizarFinanceiro();
-      gerarDiagnosticoFinanceiroIA();
-    }
-
-    // --- EQUIPE ---
-
-    function renderizarEquipe() {
-      atualizarIndicadoresInterface();
-      const divPendentes = document.getElementById('lista-solicitacoes-pendentes');
-      const divAtivos = document.getElementById('lista-equipe-ativos');
-
-      const pendentes = usuariosList.filter(u => u.status === 'pendente');
-      const ativos = usuariosList.filter(u => u.status !== 'pendente');
-
-      if (pendentes.length === 0) {
-        divPendentes.innerHTML = '<p style="font-size:0.8rem; color:var(--color-text-muted);">Nenhuma solicitação de cadastro pendente.</p>';
-      } else {
-        divPendentes.innerHTML = pendentes.map(u => `
-          <div class="user-row" style="border-left: 3px solid var(--color-alert-warning);">
-            <div class="user-info-text">
-              <span class="user-name-title">${escapeHtml(u.nome)}</span>
-              <span class="user-email-sub">${escapeHtml(u.email)}</span>
-            </div>
-            <div style="display:flex; gap:6px;">
-              <button class="btn btn-sm" onclick="aprovarUsuario('${u.id}')">Aprovar</button>
-              <button class="btn btn-danger btn-sm" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
-            </div>
-          </div>
-        `).join('');
-      }
-
-      divAtivos.innerHTML = ativos.map(u => `
-        <div class="user-row">
-          <div class="user-info-text">
-            <span class="user-name-title">${escapeHtml(u.nome)} ${(u.is_owner || u.email === EMAIL_ADMIN_ME) ? '⭐ (Dono)' : ''}</span>
-            <span class="user-email-sub">${escapeHtml(u.email)} • <strong>${u.cargo}</strong></span>
-          </div>
-          <div style="display:flex; gap:6px; align-items:center;">
-            <button class="btn btn-secondary btn-sm" onclick="abrirModalRedefinirSenhaUsuario('${u.id}')" title="Redefinir Senha">🔑 Senha</button>
-            <span class="badge-role" style="${u.status === 'bloqueado' ? 'background:rgba(229,57,53,0.2); color:#E53935;' : ''}">
-              ${u.status === 'ativo' ? 'Ativo' : 'Bloqueado'}
-            </span>
-            ${!(u.is_owner || u.email === EMAIL_ADMIN_ME) ? `
-              <button class="btn ${u.status === 'ativo' ? 'btn-danger' : 'btn-secondary'} btn-sm" onclick="alternarStatusUsuario('${u.id}', '${u.status}')">
-                ${u.status === 'ativo' ? '🚫 Bloquear' : '✅ Desbloquear'}
-              </button>
-            ` : ''}
-          </div>
-        </div>
-      `).join('');
-      const reqEl=document.getElementById('lista-solicitacoes-exclusao');
-      if(reqEl) reqEl.innerHTML=solicitacoesExclusao.length ? solicitacoesExclusao.map(r=>`<div class="request-row"><div><strong>${escapeHtml(r.nome)}</strong><small>${escapeHtml(r.email)} · ${new Date(r.created_at).toLocaleDateString('pt-BR')}</small></div><div style="display:flex;gap:6px"><button class="btn btn-primary btn-sm" onclick="decidirExclusaoConta('${r.id}',true)">Aprovar</button><button class="btn btn-secondary btn-sm" onclick="decidirExclusaoConta('${r.id}',false)">Recusar</button></div></div>`).join('') : '<p style="font-size:10px;color:var(--muted)">Nenhuma solicitação de exclusão pendente.</p>';
-    }
-
-    async function aprovarUsuario(id) {
-      if (!exigirAdmin()) return;
-      await db.from('perfis_usuarios').update({ status: 'ativo' }).eq('id', id);
-      await carregarUsuarios();
-      renderizarEquipe();
-    }
-
-    async function rejeitarUsuario(id) {
-      if (!exigirAdmin()) return;
-      if (confirm('Deseja rejeitar e remover esta solicitação?')) {
-        await db.from('perfis_usuarios').delete().eq('id', id);
-        await carregarUsuarios();
-        renderizarEquipe();
-      }
-    }
-
-    async function alternarStatusUsuario(id, statusAtual) {
-      if (!exigirAdmin()) return;
-      const novoStatus = statusAtual === 'ativo' ? 'bloqueado' : 'ativo';
-      const { error } = await db.from('perfis_usuarios').update({ status: novoStatus }).eq('id', id);
-      if (error) {
-        return alert('Erro ao alterar status do colaborador.');
-      }
-      alert(`Status do usuário alterado para: ${novoStatus.toUpperCase()}`);
-      await carregarUsuarios();
-      renderizarEquipe();
-    }
-
-    function abrirModalRedefinirSenhaUsuario(id) {
-      if (!exigirAdmin()) return;
-      const usuario = usuariosList.find(u => u.id === id);
-      document.getElementById('reset-user-id').value = id;
-      document.getElementById('reset-user-nome').value = usuario?.nome || 'Colaborador';
-      document.getElementById('reset-nova-senha-adm').value = '';
-      document.getElementById('modal-alterar-senha-adm').classList.add('active');
-    }
-
-    async function salvarNovaSenhaUsuarioAdm() {
-      if (!exigirAdmin()) return;
-      const id = document.getElementById('reset-user-id').value;
-      const novaSenha = document.getElementById('reset-nova-senha-adm').value;
-
-      if (!novaSenha || novaSenha.length < 6) {
-        return alert('Digite uma nova senha com pelo menos 6 caracteres.');
-      }
-
-      await db.from('perfis_usuarios').update({ senha: novaSenha }).eq('id', id);
-      alert('Senha do colaborador redefinida com sucesso!');
-      fecharModais();
-      await carregarUsuarios();
-      renderizarEquipe();
-    }
-
-    async function salvarNovoUsuario() {
-      if (!exigirAdmin()) return;
-      const nome = document.getElementById('usr-nome').value.trim();
-      const email = document.getElementById('usr-email').value.trim();
-      const senha = document.getElementById('usr-senha').value;
-      const cargo = document.getElementById('usr-cargo').value;
-
-      if (!nome || !email) return alert('Preencha o nome e o e-mail do colaborador.');
-
-      await db.from('perfis_usuarios').insert([{ nome, email, senha, cargo, status: 'ativo' }]);
-      fecharModais();
-      await carregarUsuarios();
-      renderizarEquipe();
-    }
-
-    // Padroniza todas as fotos de produto em 1080 x 1070 px.
-    // O enquadramento usa "cover" centralizado: preserva as proporções e não estica a imagem.
-    function compactarFotoProduto(file) {
-      return new Promise((resolve,reject)=>{
-        const reader=new FileReader();
-        reader.onerror=()=>reject(new Error('Falha ao ler a imagem.'));
-        reader.onload=()=>{
-          const img=new Image();
-          img.onerror=()=>reject(new Error('Formato de imagem inválido.'));
-          img.onload=()=>{
-            const largura=1080, altura=1070;
-            const escala=Math.max(largura/img.naturalWidth, altura/img.naturalHeight);
-            const larguraRender=img.naturalWidth*escala;
-            const alturaRender=img.naturalHeight*escala;
-            const x=(largura-larguraRender)/2;
-            const y=(altura-alturaRender)/2;
-            const canvas=document.createElement('canvas');
-            canvas.width=largura;
-            canvas.height=altura;
-            const contexto=canvas.getContext('2d');
-            if(!contexto) return reject(new Error('Não foi possível preparar a imagem.'));
-            contexto.imageSmoothingEnabled=true;
-            contexto.imageSmoothingQuality='high';
-            contexto.drawImage(img,x,y,larguraRender,alturaRender);
-            const webp=canvas.toDataURL('image/webp',.84);
-            // Navegadores sem suporte a WebP retornam PNG mesmo quando solicitado.
-            resolve(webp.startsWith('data:image/webp') ? webp : canvas.toDataURL('image/jpeg',.84));
-          };
-          img.src=reader.result;
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-    function previewFotoProduto(event) {
-      const file=event.target.files?.[0]; if(!file) return;
-      if(!file.type.startsWith('image/')) { event.target.value=''; return alert('Selecione uma imagem válida.'); }
-      if(file.size>50*1024*1024) { event.target.value=''; return alert('A imagem deve ter no máximo 50 MB.'); }
-      const preview=document.getElementById('prod-imagem-preview');
-      preview.src=URL.createObjectURL(file); preview.classList.add('visible');
-    }
-    function removerFotoProduto() { fotoProdutoAtual=null; const input=document.getElementById('prod-imagem'); if(input)input.value=''; const preview=document.getElementById('prod-imagem-preview'); if(preview){preview.src='';preview.classList.remove('visible');} }
-
-    function abrirModalConta() {
-      if(!usuarioAtual) return;
-      fecharModais();
-      document.getElementById('conta-nome').value=usuarioAtual.nome||'';
-      document.getElementById('conta-email').value=usuarioAtual.email||'';
-      document.getElementById('conta-senha').value='';
-      document.getElementById('conta-senha-confirm').value='';
-      document.getElementById('modal-conta').classList.add('active');
-    }
-    async function salvarInformacoesConta() {
-      if(!usuarioAtual) return;
-      const nome=document.getElementById('conta-nome').value.trim();
-      const email=document.getElementById('conta-email').value.trim().toLowerCase();
-      const senha=document.getElementById('conta-senha').value;
-      const confirmacao=document.getElementById('conta-senha-confirm').value;
-      if(!nome||!email) return alert('Informe seu nome e e-mail.');
-      if(senha && senha.length<8) return alert('A nova senha deve ter pelo menos 8 caracteres.');
-      if(senha!==confirmacao) return alert('A confirmação da senha não corresponde.');
-      const atualizacao={nome,email}; if(senha) atualizacao.senha=senha;
-      const {error}=await db.from('perfis_usuarios').update(atualizacao).eq('id',usuarioAtual.id);
-      if(error) return alert('Não foi possível atualizar a conta: '+error.message);
-      usuarioAtual={...usuarioAtual,nome,email}; salvarSessao(usuarioAtual);
-      ['current-user-name','user-name-side','welcome-name'].forEach(id=>{const el=getEl(id);if(el)el.textContent=nome;});
-      fecharModais(); alert('Informações da conta atualizadas. Seu histórico foi mantido.');
-    }
-    async function solicitarExclusaoConta() {
-      if(!usuarioAtual) return;
-      if(usuarioAtual.is_owner || usuarioAtual.email===EMAIL_ADMIN_ME) return alert('A conta principal do administrador não pode solicitar exclusão por este fluxo.');
-      if(!confirm('Enviar ao administrador uma solicitação para excluir sua conta? Ela só será removida após aprovação.')) return;
-      const {data:existente,error:consultaErro}=await db.from('solicitacoes_exclusao').select('id').eq('user_id',usuarioAtual.id).eq('status','pendente').maybeSingle();
-      if(consultaErro) return alert('Não foi possível verificar solicitações. Aplique a atualização SQL do projeto.');
-      if(existente) return alert('Você já possui uma solicitação aguardando análise.');
-      const {error}=await db.from('solicitacoes_exclusao').insert([{user_id:usuarioAtual.id,nome:usuarioAtual.nome,email:usuarioAtual.email,status:'pendente'}]);
-      if(error) return alert('Não foi possível enviar a solicitação: '+error.message);
-      fecharModais(); alert('Solicitação enviada ao administrador. Você poderá continuar usando a conta até a decisão.');
-    }
-    async function carregarSolicitacoesExclusao() {
-      const {data,error}=await db.from('solicitacoes_exclusao').select('*').eq('status','pendente').order('created_at',{ascending:true});
-      if(error) { console.warn('Solicitações de exclusão indisponíveis. Aplique o SQL de atualização.',error); solicitacoesExclusao=[]; }
-      else solicitacoesExclusao=data||[];
-    }
-    async function decidirExclusaoConta(id,aprovar) {
-      if(!exigirAdmin()) return;
-      const pedido=solicitacoesExclusao.find(x=>x.id===id); if(!pedido) return;
-      if(aprovar) {
-        if(!confirm(`Excluir o perfil de ${pedido.nome}? As vendas e registros históricos não serão apagados.`)) return;
-        const {error:delError}=await db.from('perfis_usuarios').delete().eq('id',pedido.user_id);
-        if(delError) return alert('Não foi possível excluir o perfil: '+delError.message);
-      }
-      const {error}=await db.from('solicitacoes_exclusao').update({status:aprovar?'aprovada':'recusada',reviewed_at:new Date().toISOString()}).eq('id',id);
-      if(error) return alert('A conta foi tratada, mas não foi possível atualizar a solicitação: '+error.message);
-      await carregarUsuarios(); await carregarSolicitacoesExclusao(); renderizarEquipe();
-    }
-
-    // --- MODAIS GERAIS ---
-
-    function fecharModais() {
-      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.remove('active'));
-    }
-
-    function abrirModalProduto() {
-      if (!exigirAdmin()) return;
-      document.getElementById('modal-produto-titulo').innerText = 'Cadastrar Produto';
-      document.getElementById('prod-id').value = '';
-      document.getElementById('prod-nome').value = '';
-      document.getElementById('prod-custo').value = '';
-      document.getElementById('prod-preco').value = '';
-      document.getElementById('prod-comissao').value = '';
-      document.getElementById('prod-qtd').value = '';
-      fotoProdutoAtual = null;
-      document.getElementById('prod-imagem').value = '';
-      const preview = document.getElementById('prod-imagem-preview'); preview.src=''; preview.classList.remove('visible');
-      document.getElementById('modal-produto').classList.add('active');
-    }
-
-    function abrirModalNovoUsuario() {
-      if (!exigirAdmin()) return;
-      document.getElementById('modal-usuario').classList.add('active');
-    }
-
-    function abrirModalDespesaExtra() {
-      if (!exigirAdmin()) return;
-      document.getElementById('modal-despesa').classList.add('active');
-    }
-
-    function abrirConfiguracoes() {
-      document.getElementById('modal-configuracoes').classList.add('active');
-    }
-  
-
-    // Busca em tempo real nos catálogos.
-    document.addEventListener('input', event => {
-      if (event.target?.id === 'busca-produtos-pdv') renderizarVendas();
-      if (event.target?.id === 'busca-estoque') renderizarEstoque();
-    });
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape') fecharModais();
-    });
-    document.addEventListener('click', event => {
-      const overlay = event.target;
-      if (overlay?.classList?.contains('modal-overlay') && overlay.id !== 'auth-modal') fecharModais();
-    });
-
-  </script>
-</body>
-
-</html>
