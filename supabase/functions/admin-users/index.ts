@@ -80,7 +80,7 @@ Deno.serve(async (req: Request) => {
       const { data: profile, error: profileError } = await admin
         .from("perfis_usuarios")
         .update({ nome, cargo, status: "ativo" })
-        .eq("email", email)
+        .ilike("email", email)
         .select("id,nome,email,cargo,status")
         .maybeSingle();
       if (profileError || !profile) {
